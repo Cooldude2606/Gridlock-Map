@@ -1,0 +1,17 @@
+{
+  "name": "gridlock-cluster-gfx",
+  "version": "1.0.0",
+  "description": "Map making tool for gridlock cluster",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "jimp": "^0.3.11"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Cooldude2606",
+  "license": "ISC"
+}
