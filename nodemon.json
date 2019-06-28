@@ -1,0 +1,9 @@
+{
+    "restartable": "rs",
+    "watch": ["src"],
+    "ext": "ts",
+    "exec": "npm run build:ts && npm run start:app",
+    "env": {
+        "NODE_ENV": "development"
+    }
+}
