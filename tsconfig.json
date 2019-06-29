@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "declaration": false,
+        "noImplicitAny": true,
+        "removeComments": true,
+        "sourceMap": true,
+        "allowJs": true,
+        "noLib": false,
+        "target": "es5",
+        "module": "commonjs",
+        "sourceRoot": "./src",
+        "outDir": "./dist"
+    },
+    "include": ["src"],
+    "exclude": ["src/public"]
+}
