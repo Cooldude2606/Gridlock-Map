@@ -5,7 +5,7 @@ import { tileAssets, connectionAssets, logoAssets } from "./config";
 import { newTileSpriteSheet, newConnectionSpriteSheet } from "../entities/asset";
 import { Grid } from "../entities/grid";
 
-process.env.NODE_ENV = 'development'
+//process.env.NODE_ENV = 'development'
 
 function sketchDefine(sketch: p5) {
 
@@ -29,8 +29,8 @@ function sketchDefine(sketch: p5) {
         let context = canvas.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
 
-        for (let x = 0; x < 10;x++) {
-            for (let y = 0; y < 10;y++) {
+        for (let x = 0; x < 15;x++) {
+            for (let y = 0; y < 15;y++) {
                 grid.newTile({x:x,y:y},{x:1,y:1})
             }
         }
@@ -42,15 +42,16 @@ function sketchDefine(sketch: p5) {
                 newTileSpriteSheet(image,config)
             })
         })
-        logoAssets.forEach(config => {
-            sketch.loadImage(`assets/${config.file}`,image => {
+        for (let logoName in logoAssets) {
+            const file = logoAssets[logoName]
+            sketch.loadImage(`assets/${file}`,image => {
                 newTileSpriteSheet(image,{
                     x: 2,
                     y: 2,
-                    file: config.file
-                },config.name)
+                    file: file
+                },logoName)
             })
-        })
+        }
         connectionAssets.forEach(config => {
             const range: Range = {minimum: config.min, maximum: config.max}
             config.connections.forEach(connection => {

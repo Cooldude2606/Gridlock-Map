@@ -5,7 +5,7 @@ var log_1 = require("../lib/log");
 var tileSpriteSheets = [];
 var connectionSpriteSheets = [];
 function newTileSpriteSheet(image, config, logo) {
-    log_1.log.info("Loaded sprite sheet from: " + config.file);
+    log_1.log.debug("Loaded sprite sheet from: " + config.file);
     tileSpriteSheets.push({
         image: image,
         tileSize: {
@@ -21,7 +21,7 @@ function newTileSpriteSheet(image, config, logo) {
 }
 exports.newTileSpriteSheet = newTileSpriteSheet;
 function newConnectionSpriteSheet(image, range, config) {
-    log_1.log.info("Loaded sprite sheet from: " + config.file);
+    log_1.log.debug("Loaded sprite sheet from: " + config.file);
     var connections = connectionSpriteSheets.find(function (connection) {
         return range.minimum == connection.range.minimum && range.maximum == connection.range.maximum;
     });

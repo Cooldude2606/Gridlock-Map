@@ -1,3 +1,5 @@
+import { Dictionary } from "../lib/defines";
+
 export const renderSettings = {
     scale: 2,
     tileSize: {
@@ -13,19 +15,26 @@ export const tileAssets = [
     { x: 2, y: 2, file: 'tile003.png'}
 ]
 
-export const logoAssets = [
-    { name: 'redmew', file: 'logo000.png'},
-    { name: 'fmmo', file: 'logo001.png'},
-    { name: 'expgaming', file: 'logo002.png'},
-    { name: 'clustorio', file: 'logo003.png'},
-    { name: 'lizzian', file: 'logo004.png'},
-    { name: 'areyouscared', file: 'logo005.png'},
-    { name: 'wbtc', file: 'logo006.png'},
-    { name: 'tobi', file: 'logo007.png'},
-    { name: 'kaeltar', file: 'logo008.png'},
-    { name: 'upcloud', file: 'logo009.png'},
-    { name: 'japc', file: 'logo010.png'},
-    { name: 'p74', file: 'logo010.png'}
+export const logoAssets: Dictionary = {
+    redmew: 'logo000.png',
+    fmmo: 'logo001.png',
+    expgaming: 'logo002.png',
+    clustorio: 'logo003.png',
+    lizzian: 'logo004.png',
+    areyouscared: 'logo005.png',
+    wbtc: 'logo006.png',
+    tobi: 'logo007.png',
+    kaeltar: 'logo008.png',
+    upcloud: 'logo009.png',
+    japc: 'logo010.png',
+    p74: 'logo010.png'
+}
+
+export const progressCalculations = [
+    { min: 0, max: 6, rtn: (p:number):number => p-2},
+    { min: 7, max: 7, rtn: (p:number):number => p-1},
+    { min: 8, max: 16, rtn: (p:number):number => 6},
+    { min: 17, max: 17, rtn: (p:number):number => 7},
 ]
 
 export const connectionAssets = [

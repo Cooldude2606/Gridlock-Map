@@ -2,6 +2,7 @@ import { Tile, Redirect } from "./tile";
 import { Size, Position, Direction, TileExport } from "../lib/defines";
 import p5 = require("p5");
 import { log } from "../lib/log";
+import { progressCalculations } from "../public/config";
 
 export class Grid {
 
@@ -56,59 +57,22 @@ export class Grid {
         const adjacent: Array<Tile> = []
         position = tile.position
 
-        function tileExists(grid: Grid, adjacent: Array<Tile>, position: Position) {
-            const adjacentTile = grid.getTile(position)
+        function tileExists(grid: Grid, adjacent: Array<Tile>, x: number, y: number) {
+            const adjacentTile = grid.getTile({x:x,y:y})
             if (adjacentTile) adjacent.push(adjacentTile)
         }
 
         for (let sx = 0; sx < tile.size.x; sx++) {
-            tileExists(this,adjacent,{x: position.x+sx, y: position.y-1})
-            tileExists(this,adjacent,{x: position.x+sx, y: position.y+tile.size.y})
+            tileExists(this,adjacent,position.x+sx,position.y-1)
+            tileExists(this,adjacent,position.x+sx,position.y+tile.size.y)
         }
 
         for (let sy = 0; sy < tile.size.y; sy++) {
-            tileExists(this,adjacent,{x: position.x-1, y: position.y+sy})
-            tileExists(this,adjacent,{x: position.x+tile.size.x, y: position.y+sy})
+            tileExists(this,adjacent,position.x-1,position.y+sy)
+            tileExists(this,adjacent,position.x+tile.size.x,position.y+sy)
         }
 
         return adjacent
-    }
-
-    // removes a single tile, no redirect
-    removeTileRaw(position: Position): void {
-        const tileCount = this.tiles.length
-        for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            const tile = this.tiles[tileIndex]
-            if (tile.position.x == position.x && tile.position.y == position.y) {
-                this.tiles.splice(tileIndex,1)
-                break
-            }
-        }
-    }
-
-    // removes a tile and all tiles that redirect to it
-    removeTile(position: Position): void {
-        const tile = this.getTile(position)
-        this.removeTileRaw(position)
-        tile.redirects.forEach(redirect => {
-            this.removeTileRaw(redirect.position)
-        })
-    }
-
-    // checks if an area is clear
-    areaClear(position: Position, size: Size): boolean {
-        for (let sx = 0; sx < size.x; sx++) {
-            for (let sy = 0; sy < size.y; sy++) {
-                if (sx != 0 && sy != 0) {
-                    const tile = this.getTile({
-                        x: position.x + sx,
-                        y: position.y + sy
-                    })
-                    if (tile) return false
-                }
-            }
-        }
-        return true
     }
 
     // makes a tile that redirects to a different one
@@ -135,17 +99,47 @@ export class Grid {
         return tile
     }
 
+    calculateProgress(startTile: Tile) {
+        const queue: Array<Tile> = [startTile]
+
+        for (let currentIndex = 0; currentIndex < queue.length; currentIndex++) {
+            const tile = queue[currentIndex]
+
+            if (queue.indexOf(tile) >= currentIndex) {
+                const adjacent = this.getAdjacentTiles(tile.position)
+                let newProgress = tile.progress
+
+                adjacent.forEach(adjacentTile => {
+                    queue.push(adjacentTile)
+                    const calc = progressCalculations.find(calcs => {
+                        return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max
+                    })
+                    const rtn = calc.rtn(adjacentTile.progress)
+                    if (newProgress < rtn)  newProgress = rtn
+                })
+
+                tile.progress = newProgress < 0 ? 0 : newProgress
+            }
+
+        }
+
+    }
+
     load(data: Array<TileExport>): void {
         log.debug('Loading new map data')
         this.tiles = []
         data.forEach(tileData => {
             const tile = this.newTile(tileData.position,tileData.size,tileData.logo)
-            tile.progress = tileData.progress || 17
+            tile.progress = tileData.progress || 0
             tile.inverted = tileData.inverted || false
         })
     }
 
     draw(buffer: p5): void {
+        this.tiles.forEach(tile => {
+            if (tile instanceof Tile && tile.progress > 0) this.calculateProgress(tile)
+        })
+
         this.tiles.forEach(tile => {
             tile.draw(buffer,this)
         })

@@ -40,11 +40,10 @@ export class Tile {
     constructor(position: Position, size: Size, logo?: string) {
         this.position = position
         this.size = size
-        switch (Math.round(Math.random()*2)) {
-            case 0: this.progress = 7; break
-            case 1: this.progress = 8; break
-            case 2: this.progress = 17; break
-        }
+        const ran = Math.random()
+        if (ran < 0.95) this.progress = 0; else
+        if (ran < 0.98) this.progress = 8
+        else this.progress = 17
         this.logo = logo
         this.inverted = false
         this.redirects = []

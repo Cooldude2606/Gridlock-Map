@@ -95493,7 +95493,7 @@ var log_1 = require("../lib/log");
 var tileSpriteSheets = [];
 var connectionSpriteSheets = [];
 function newTileSpriteSheet(image, config, logo) {
-    log_1.log.info("Loaded sprite sheet from: " + config.file);
+    log_1.log.debug("Loaded sprite sheet from: " + config.file);
     tileSpriteSheets.push({
         image: image,
         tileSize: {
@@ -95509,7 +95509,7 @@ function newTileSpriteSheet(image, config, logo) {
 }
 exports.newTileSpriteSheet = newTileSpriteSheet;
 function newConnectionSpriteSheet(image, range, config) {
-    log_1.log.info("Loaded sprite sheet from: " + config.file);
+    log_1.log.debug("Loaded sprite sheet from: " + config.file);
     var connections = connectionSpriteSheets.find(function (connection) {
         return range.minimum == connection.range.minimum && range.maximum == connection.range.maximum;
     });
@@ -95574,6 +95574,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tile_1 = require("./tile");
 var defines_1 = require("../lib/defines");
 var log_1 = require("../lib/log");
+var config_1 = require("../public/config");
 var Grid = function () {
     function Grid() {
         this.tiles = [];
@@ -95626,51 +95627,19 @@ var Grid = function () {
         var tile = this.getTile(position);
         var adjacent = [];
         position = tile.position;
-        function tileExists(grid, adjacent, position) {
-            var adjacentTile = grid.getTile(position);
+        function tileExists(grid, adjacent, x, y) {
+            var adjacentTile = grid.getTile({ x: x, y: y });
             if (adjacentTile) adjacent.push(adjacentTile);
         }
         for (var sx = 0; sx < tile.size.x; sx++) {
-            tileExists(this, adjacent, { x: position.x + sx, y: position.y - 1 });
-            tileExists(this, adjacent, { x: position.x + sx, y: position.y + tile.size.y });
+            tileExists(this, adjacent, position.x + sx, position.y - 1);
+            tileExists(this, adjacent, position.x + sx, position.y + tile.size.y);
         }
         for (var sy = 0; sy < tile.size.y; sy++) {
-            tileExists(this, adjacent, { x: position.x - 1, y: position.y + sy });
-            tileExists(this, adjacent, { x: position.x + tile.size.x, y: position.y + sy });
+            tileExists(this, adjacent, position.x - 1, position.y + sy);
+            tileExists(this, adjacent, position.x + tile.size.x, position.y + sy);
         }
         return adjacent;
-    };
-    Grid.prototype.removeTileRaw = function (position) {
-        var tileCount = this.tiles.length;
-        for (var tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            var tile = this.tiles[tileIndex];
-            if (tile.position.x == position.x && tile.position.y == position.y) {
-                this.tiles.splice(tileIndex, 1);
-                break;
-            }
-        }
-    };
-    Grid.prototype.removeTile = function (position) {
-        var _this = this;
-        var tile = this.getTile(position);
-        this.removeTileRaw(position);
-        tile.redirects.forEach(function (redirect) {
-            _this.removeTileRaw(redirect.position);
-        });
-    };
-    Grid.prototype.areaClear = function (position, size) {
-        for (var sx = 0; sx < size.x; sx++) {
-            for (var sy = 0; sy < size.y; sy++) {
-                if (sx != 0 && sy != 0) {
-                    var tile = this.getTile({
-                        x: position.x + sx,
-                        y: position.y + sy
-                    });
-                    if (tile) return false;
-                }
-            }
-        }
-        return true;
     };
     Grid.prototype.newRedirect = function (position, tile) {
         var redirect = new tile_1.Redirect(position, tile);
@@ -95692,18 +95661,44 @@ var Grid = function () {
         }
         return tile;
     };
+    Grid.prototype.calculateProgress = function (startTile) {
+        var queue = [startTile];
+        var _loop_1 = function _loop_1(currentIndex) {
+            var tile = queue[currentIndex];
+            if (queue.indexOf(tile) >= currentIndex) {
+                var adjacent = this_1.getAdjacentTiles(tile.position);
+                var newProgress_1 = tile.progress;
+                adjacent.forEach(function (adjacentTile) {
+                    queue.push(adjacentTile);
+                    var calc = config_1.progressCalculations.find(function (calcs) {
+                        return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
+                    });
+                    var rtn = calc.rtn(adjacentTile.progress);
+                    if (newProgress_1 < rtn) newProgress_1 = rtn;
+                });
+                tile.progress = newProgress_1 < 0 ? 0 : newProgress_1;
+            }
+        };
+        var this_1 = this;
+        for (var currentIndex = 0; currentIndex < queue.length; currentIndex++) {
+            _loop_1(currentIndex);
+        }
+    };
     Grid.prototype.load = function (data) {
         var _this = this;
         log_1.log.debug('Loading new map data');
         this.tiles = [];
         data.forEach(function (tileData) {
             var tile = _this.newTile(tileData.position, tileData.size, tileData.logo);
-            tile.progress = tileData.progress || 17;
+            tile.progress = tileData.progress || 0;
             tile.inverted = tileData.inverted || false;
         });
     };
     Grid.prototype.draw = function (buffer) {
         var _this = this;
+        this.tiles.forEach(function (tile) {
+            if (tile instanceof tile_1.Tile && tile.progress > 0) _this.calculateProgress(tile);
+        });
         this.tiles.forEach(function (tile) {
             tile.draw(buffer, _this);
         });
@@ -95712,7 +95707,7 @@ var Grid = function () {
 }();
 exports.Grid = Grid;
 
-},{"../lib/defines":20,"../lib/log":21,"./tile":19}],19:[function(require,module,exports){
+},{"../lib/defines":20,"../lib/log":21,"../public/config":22,"./tile":19}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -95741,17 +95736,8 @@ var Tile = function () {
     function Tile(position, size, logo) {
         this.position = position;
         this.size = size;
-        switch (Math.round(Math.random() * 2)) {
-            case 0:
-                this.progress = 7;
-                break;
-            case 1:
-                this.progress = 8;
-                break;
-            case 2:
-                this.progress = 17;
-                break;
-        }
+        var ran = Math.random();
+        if (ran < 0.95) this.progress = 0;else if (ran < 0.98) this.progress = 8;else this.progress = 17;
         this.logo = logo;
         this.inverted = false;
         this.redirects = [];
@@ -95877,11 +95863,32 @@ exports.renderSettings = {
     }
 };
 exports.tileAssets = [{ x: 1, y: 1, file: 'tile000.png' }, { x: 2, y: 1, file: 'tile001.png' }, { x: 1, y: 2, file: 'tile002.png' }, { x: 2, y: 2, file: 'tile003.png' }];
-exports.logoAssets = [{ name: 'redmew', file: 'logo000.png' }, { name: 'fmmo', file: 'logo001.png' }, { name: 'expgaming', file: 'logo002.png' }, { name: 'clustorio', file: 'logo003.png' }, { name: 'lizzian', file: 'logo004.png' }, { name: 'areyouscared', file: 'logo005.png' }, { name: 'wbtc', file: 'logo006.png' }, { name: 'tobi', file: 'logo007.png' }, { name: 'kaeltar', file: 'logo008.png' }, { name: 'upcloud', file: 'logo009.png' }, { name: 'japc', file: 'logo010.png' }, { name: 'p74', file: 'logo010.png' }];
+exports.logoAssets = {
+    redmew: 'logo000.png',
+    fmmo: 'logo001.png',
+    expgaming: 'logo002.png',
+    clustorio: 'logo003.png',
+    lizzian: 'logo004.png',
+    areyouscared: 'logo005.png',
+    wbtc: 'logo006.png',
+    tobi: 'logo007.png',
+    kaeltar: 'logo008.png',
+    upcloud: 'logo009.png',
+    japc: 'logo010.png',
+    p74: 'logo010.png'
+};
+exports.progressCalculations = [{ min: 0, max: 6, rtn: function rtn(p) {
+        return p - 2;
+    } }, { min: 7, max: 7, rtn: function rtn(p) {
+        return p - 1;
+    } }, { min: 8, max: 16, rtn: function rtn(p) {
+        return 6;
+    } }, { min: 17, max: 17, rtn: function rtn(p) {
+        return 7;
+    } }];
 exports.connectionAssets = [{ min: 7, max: 7, connections: [{ min: 0, max: 17, file: 'connection000.png' }] }, { min: 8, max: 16, connections: [{ min: 0, max: 16, file: 'connection000.png' }, { min: 17, max: 17, file: 'connection003.png' }] }, { min: 17, max: 17, connections: [{ min: 0, max: 7, file: 'connection000.png' }, { min: 8, max: 16, file: 'connection002.png' }, { min: 17, max: 17, file: 'connection001.png' }] }];
 
 },{}],23:[function(require,module,exports){
-(function (process){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -95890,7 +95897,6 @@ require("p5/lib/addons/p5.dom");
 var config_1 = require("./config");
 var asset_1 = require("../entities/asset");
 var grid_1 = require("../entities/grid");
-process.env.NODE_ENV = 'development';
 function sketchDefine(sketch) {
     var grid = new grid_1.Grid();
     var canvas;
@@ -95907,8 +95913,8 @@ function sketchDefine(sketch) {
         });
         var context = canvas.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
-        for (var x = 0; x < 10; x++) {
-            for (var y = 0; y < 10; y++) {
+        for (var x = 0; x < 15; x++) {
+            for (var y = 0; y < 15; y++) {
                 grid.newTile({ x: x, y: y }, { x: 1, y: 1 });
             }
         }
@@ -95919,15 +95925,19 @@ function sketchDefine(sketch) {
                 asset_1.newTileSpriteSheet(image, config);
             });
         });
-        config_1.logoAssets.forEach(function (config) {
-            sketch.loadImage("assets/" + config.file, function (image) {
+        var _loop_1 = function _loop_1(logoName) {
+            var file = config_1.logoAssets[logoName];
+            sketch.loadImage("assets/" + file, function (image) {
                 asset_1.newTileSpriteSheet(image, {
                     x: 2,
                     y: 2,
-                    file: config.file
-                }, config.name);
+                    file: file
+                }, logoName);
             });
-        });
+        };
+        for (var logoName in config_1.logoAssets) {
+            _loop_1(logoName);
+        }
         config_1.connectionAssets.forEach(function (config) {
             var range = { minimum: config.min, maximum: config.max };
             config.connections.forEach(function (connection) {
@@ -95945,8 +95955,6 @@ function sketchDefine(sketch) {
 }
 new p5(sketchDefine).redraw();
 
-}).call(this,require('_process'))
-
-},{"../entities/asset":17,"../entities/grid":18,"./config":22,"_process":15,"p5":14,"p5/lib/addons/p5.dom":13}]},{},[23])
+},{"../entities/asset":17,"../entities/grid":18,"./config":22,"p5":14,"p5/lib/addons/p5.dom":13}]},{},[23])
 
 //# sourceMappingURL=build.js.map

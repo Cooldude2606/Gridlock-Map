@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tile_1 = require("./tile");
 var defines_1 = require("../lib/defines");
 var log_1 = require("../lib/log");
+var config_1 = require("../public/config");
 var Grid = (function () {
     function Grid() {
         this.tiles = [];
@@ -51,53 +52,20 @@ var Grid = (function () {
         var tile = this.getTile(position);
         var adjacent = [];
         position = tile.position;
-        function tileExists(grid, adjacent, position) {
-            var adjacentTile = grid.getTile(position);
+        function tileExists(grid, adjacent, x, y) {
+            var adjacentTile = grid.getTile({ x: x, y: y });
             if (adjacentTile)
                 adjacent.push(adjacentTile);
         }
         for (var sx = 0; sx < tile.size.x; sx++) {
-            tileExists(this, adjacent, { x: position.x + sx, y: position.y - 1 });
-            tileExists(this, adjacent, { x: position.x + sx, y: position.y + tile.size.y });
+            tileExists(this, adjacent, position.x + sx, position.y - 1);
+            tileExists(this, adjacent, position.x + sx, position.y + tile.size.y);
         }
         for (var sy = 0; sy < tile.size.y; sy++) {
-            tileExists(this, adjacent, { x: position.x - 1, y: position.y + sy });
-            tileExists(this, adjacent, { x: position.x + tile.size.x, y: position.y + sy });
+            tileExists(this, adjacent, position.x - 1, position.y + sy);
+            tileExists(this, adjacent, position.x + tile.size.x, position.y + sy);
         }
         return adjacent;
-    };
-    Grid.prototype.removeTileRaw = function (position) {
-        var tileCount = this.tiles.length;
-        for (var tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            var tile = this.tiles[tileIndex];
-            if (tile.position.x == position.x && tile.position.y == position.y) {
-                this.tiles.splice(tileIndex, 1);
-                break;
-            }
-        }
-    };
-    Grid.prototype.removeTile = function (position) {
-        var _this = this;
-        var tile = this.getTile(position);
-        this.removeTileRaw(position);
-        tile.redirects.forEach(function (redirect) {
-            _this.removeTileRaw(redirect.position);
-        });
-    };
-    Grid.prototype.areaClear = function (position, size) {
-        for (var sx = 0; sx < size.x; sx++) {
-            for (var sy = 0; sy < size.y; sy++) {
-                if (sx != 0 && sy != 0) {
-                    var tile = this.getTile({
-                        x: position.x + sx,
-                        y: position.y + sy
-                    });
-                    if (tile)
-                        return false;
-                }
-            }
-        }
-        return true;
     };
     Grid.prototype.newRedirect = function (position, tile) {
         var redirect = new tile_1.Redirect(position, tile);
@@ -119,18 +87,46 @@ var Grid = (function () {
         }
         return tile;
     };
+    Grid.prototype.calculateProgress = function (startTile) {
+        var queue = [startTile];
+        var _loop_1 = function (currentIndex) {
+            var tile = queue[currentIndex];
+            if (queue.indexOf(tile) >= currentIndex) {
+                var adjacent = this_1.getAdjacentTiles(tile.position);
+                var newProgress_1 = tile.progress;
+                adjacent.forEach(function (adjacentTile) {
+                    queue.push(adjacentTile);
+                    var calc = config_1.progressCalculations.find(function (calcs) {
+                        return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
+                    });
+                    var rtn = calc.rtn(adjacentTile.progress);
+                    if (newProgress_1 < rtn)
+                        newProgress_1 = rtn;
+                });
+                tile.progress = newProgress_1 < 0 ? 0 : newProgress_1;
+            }
+        };
+        var this_1 = this;
+        for (var currentIndex = 0; currentIndex < queue.length; currentIndex++) {
+            _loop_1(currentIndex);
+        }
+    };
     Grid.prototype.load = function (data) {
         var _this = this;
         log_1.log.debug('Loading new map data');
         this.tiles = [];
         data.forEach(function (tileData) {
             var tile = _this.newTile(tileData.position, tileData.size, tileData.logo);
-            tile.progress = tileData.progress || 17;
+            tile.progress = tileData.progress || 0;
             tile.inverted = tileData.inverted || false;
         });
     };
     Grid.prototype.draw = function (buffer) {
         var _this = this;
+        this.tiles.forEach(function (tile) {
+            if (tile instanceof tile_1.Tile && tile.progress > 0)
+                _this.calculateProgress(tile);
+        });
         this.tiles.forEach(function (tile) {
             tile.draw(buffer, _this);
         });

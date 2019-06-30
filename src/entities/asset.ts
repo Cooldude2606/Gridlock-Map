@@ -7,7 +7,7 @@ const tileSpriteSheets: Array<TileSpriteSheet> = []
 const connectionSpriteSheets: Array<ConnectionSpriteSheet> = []
 
 export function newTileSpriteSheet(image: p5.Image, config: TileSpriteSheetConfig, logo?: string): void {
-    log.info(`Loaded sprite sheet from: ${config.file}`)
+    log.debug(`Loaded sprite sheet from: ${config.file}`)
     tileSpriteSheets.push({
         image: image,
         tileSize: {
@@ -23,7 +23,7 @@ export function newTileSpriteSheet(image: p5.Image, config: TileSpriteSheetConfi
 }
 
 export function newConnectionSpriteSheet(image: p5.Image, range: Range, config: ConnectionSpriteSheetConfig): void {
-    log.info(`Loaded sprite sheet from: ${config.file}`)
+    log.debug(`Loaded sprite sheet from: ${config.file}`)
     let connections = connectionSpriteSheets.find(connection => {
         return range.minimum == connection.range.minimum && range.maximum == connection.range.maximum
     })
