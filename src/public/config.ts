@@ -1,5 +1,7 @@
 import { Dictionary } from "../lib/defines";
 
+//process.env.NODE_ENV = 'development'
+
 export const renderSettings = {
     scale: 2,
     tileSize: {

@@ -1,8 +1,8 @@
 import { Tile, Redirect } from "./tile";
-import { Size, Position, Direction, TileExport } from "../lib/defines";
+import { Size, Position, Direction, TileImport } from "../lib/defines";
 import p5 = require("p5");
 import { log } from "../lib/log";
-import { progressCalculations } from "../public/config";
+import { progressCalculations, renderSettings } from "../public/config";
 
 export class Grid {
 
@@ -125,7 +125,7 @@ export class Grid {
 
     }
 
-    load(data: Array<TileExport>): void {
+    load(data: Array<TileImport>): void {
         log.debug('Loading new map data')
         this.tiles = []
         data.forEach(tileData => {
@@ -135,13 +135,22 @@ export class Grid {
         })
     }
 
-    draw(buffer: p5): void {
+    export(sketch: p5): void {
+        const size = this.size
+        const scale = renderSettings.scale
+        const tileSize = renderSettings.tileSize
+        sketch.resizeCanvas(size.x*scale*tileSize.x,size.y*scale*tileSize.y)
+        sketch.save('gridlock-map.png')
+        sketch.resizeCanvas(sketch.windowWidth,sketch.windowHeight)
+    }
+
+    draw(sketch: p5): void {
         this.tiles.forEach(tile => {
             if (tile instanceof Tile && tile.progress > 0) this.calculateProgress(tile)
         })
 
         this.tiles.forEach(tile => {
-            tile.draw(buffer,this)
+            tile.draw(sketch,this)
         })
     }
 

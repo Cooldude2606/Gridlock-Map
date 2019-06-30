@@ -55,16 +55,16 @@ export class TileAsset {
         })
     }
 
-    drawTile(buffer: p5, position: Position, progress: number, inverted: boolean = false) {
+    drawTile(sketch: p5, position: Position, progress: number, inverted: boolean = false) {
         const scale = renderSettings.scale
         const assetSize = this.spriteSheet.assetSize
         const sx = assetSize.x*progress
         const sy = inverted ? assetSize.y : 0
         log.debug(`Rendered tile: {x:${position.x/scale/assetSize.x},y:${position.y/scale/assetSize.y},p:${progress}}`)
-        buffer.image(this.spriteSheet.image,position.x,position.y,assetSize.x*scale,assetSize.y*scale,sx,sy,assetSize.x,assetSize.y)
+        sketch.image(this.spriteSheet.image,position.x,position.y,assetSize.x*scale,assetSize.y*scale,sx,sy,assetSize.x,assetSize.y)
     }
 
-    drawConnection(buffer: p5, position: Position, direction: Direction, sourceProgress: number, targetProgress: number) {
+    drawConnection(sketch: p5, position: Position, direction: Direction, sourceProgress: number, targetProgress: number) {
         const scale = renderSettings.scale
         const assetSize = renderSettings.tileSize
         const sx = assetSize.x*direction
@@ -78,7 +78,7 @@ export class TileAsset {
         })
         if (!connection) return
         log.debug(`Rendered connection: {x:${position.x/scale/assetSize.x},y:${position.y/scale/assetSize.y},d:${direction},sp:${sourceProgress},tp:${targetProgress}}`)
-        buffer.image(connection.image,position.x,position.y,assetSize.x*scale,assetSize.y*scale,sx,sy,assetSize.x,assetSize.y)
+        sketch.image(connection.image,position.x,position.y,assetSize.x*scale,assetSize.y*scale,sx,sy,assetSize.x,assetSize.y)
     }
 
 }

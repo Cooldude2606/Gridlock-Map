@@ -1,11 +1,9 @@
 import p5 = require("p5");
 import "p5/lib/addons/p5.dom"
-import { Range, TileExport } from "../lib/defines";
+import { Range, TileImport } from "../lib/defines";
 import { tileAssets, connectionAssets, logoAssets } from "./config";
 import { newTileSpriteSheet, newConnectionSpriteSheet } from "../entities/asset";
 import { Grid } from "../entities/grid";
-
-//process.env.NODE_ENV = 'development'
 
 function sketchDefine(sketch: p5) {
 
@@ -19,7 +17,7 @@ function sketchDefine(sketch: p5) {
 
         canvas.drop(file => {
             if (file.subtype == 'json') {
-                sketch.loadJSON(file.data,(data: Array<TileExport>) => {
+                sketch.loadJSON(file.data,(data: Array<TileImport>) => {
                     grid.load(data)
                     sketch.redraw()
                 })
@@ -67,6 +65,12 @@ function sketchDefine(sketch: p5) {
         sketch.background(0)
         
         grid.draw(sketch)
+    }
+
+    sketch.mouseClicked = () => {
+        if (sketch.mouseButton == 'left') {
+            grid.export(sketch)
+        }
     }
 
 }

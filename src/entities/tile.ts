@@ -14,13 +14,13 @@ export class Redirect {
         this.tile = tile
     }
 
-    draw(buffer: p5, grid: Grid) {
+    draw(sketch: p5, grid: Grid) {
         const px = this.position.x*renderSettings.tileSize.x*renderSettings.scale
         const py = this.position.y*renderSettings.tileSize.y*renderSettings.scale
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
             if (targetTile && targetTile !== this.tile) {
-                this.tile.asset.drawConnection(buffer,{x:px,y:py},direction,this.tile.progress,targetTile.progress)
+                this.tile.asset.drawConnection(sketch,{x:px,y:py},direction,this.tile.progress,targetTile.progress)
             }
         }
     }
@@ -50,14 +50,14 @@ export class Tile {
         this.asset = new TileAsset(size,logo)
     }
 
-    draw(buffer: p5, grid: Grid) {
+    draw(sketch: p5, grid: Grid) {
         const px = this.position.x*renderSettings.tileSize.x*renderSettings.scale
         const py = this.position.y*renderSettings.tileSize.y*renderSettings.scale
-        this.asset.drawTile(buffer,{x:px,y:py},this.progress,this.inverted)
+        this.asset.drawTile(sketch,{x:px,y:py},this.progress,this.inverted)
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
             if (targetTile && targetTile !== this) {
-                this.asset.drawConnection(buffer,{x:px,y:py},direction,this.progress,targetTile.progress)
+                this.asset.drawConnection(sketch,{x:px,y:py},direction,this.progress,targetTile.progress)
             }
         }
     }

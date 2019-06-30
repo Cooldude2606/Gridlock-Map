@@ -48,16 +48,16 @@ var TileAsset = (function () {
             return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo;
         });
     }
-    TileAsset.prototype.drawTile = function (buffer, position, progress, inverted) {
+    TileAsset.prototype.drawTile = function (sketch, position, progress, inverted) {
         if (inverted === void 0) { inverted = false; }
         var scale = config_1.renderSettings.scale;
         var assetSize = this.spriteSheet.assetSize;
         var sx = assetSize.x * progress;
         var sy = inverted ? assetSize.y : 0;
         log_1.log.debug("Rendered tile: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",p:" + progress + "}");
-        buffer.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        sketch.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
     };
-    TileAsset.prototype.drawConnection = function (buffer, position, direction, sourceProgress, targetProgress) {
+    TileAsset.prototype.drawConnection = function (sketch, position, direction, sourceProgress, targetProgress) {
         var scale = config_1.renderSettings.scale;
         var assetSize = config_1.renderSettings.tileSize;
         var sx = assetSize.x * direction;
@@ -73,7 +73,7 @@ var TileAsset = (function () {
         if (!connection)
             return;
         log_1.log.debug("Rendered connection: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
-        buffer.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        sketch.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }());

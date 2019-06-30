@@ -48,7 +48,7 @@ export interface ConnectionSpriteSheet {
     }>
 }
 
-export interface TileExport {
+export interface TileImport {
     position: Position
     size: Size
     progress?: number

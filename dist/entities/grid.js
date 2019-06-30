@@ -121,14 +121,22 @@ var Grid = (function () {
             tile.inverted = tileData.inverted || false;
         });
     };
-    Grid.prototype.draw = function (buffer) {
+    Grid.prototype.export = function (sketch) {
+        var size = this.size;
+        var scale = config_1.renderSettings.scale;
+        var tileSize = config_1.renderSettings.tileSize;
+        sketch.resizeCanvas(size.x * scale * tileSize.x, size.y * scale * tileSize.y);
+        sketch.save('gridlock-map.png');
+        sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+    };
+    Grid.prototype.draw = function (sketch) {
         var _this = this;
         this.tiles.forEach(function (tile) {
             if (tile instanceof tile_1.Tile && tile.progress > 0)
                 _this.calculateProgress(tile);
         });
         this.tiles.forEach(function (tile) {
-            tile.draw(buffer, _this);
+            tile.draw(sketch, _this);
         });
     };
     return Grid;

@@ -95536,7 +95536,7 @@ var TileAsset = function () {
             return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo;
         });
     }
-    TileAsset.prototype.drawTile = function (buffer, position, progress, inverted) {
+    TileAsset.prototype.drawTile = function (sketch, position, progress, inverted) {
         if (inverted === void 0) {
             inverted = false;
         }
@@ -95545,9 +95545,9 @@ var TileAsset = function () {
         var sx = assetSize.x * progress;
         var sy = inverted ? assetSize.y : 0;
         log_1.log.debug("Rendered tile: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",p:" + progress + "}");
-        buffer.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        sketch.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
     };
-    TileAsset.prototype.drawConnection = function (buffer, position, direction, sourceProgress, targetProgress) {
+    TileAsset.prototype.drawConnection = function (sketch, position, direction, sourceProgress, targetProgress) {
         var scale = config_1.renderSettings.scale;
         var assetSize = config_1.renderSettings.tileSize;
         var sx = assetSize.x * direction;
@@ -95561,7 +95561,7 @@ var TileAsset = function () {
         });
         if (!connection) return;
         log_1.log.debug("Rendered connection: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
-        buffer.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        sketch.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }();
@@ -95694,13 +95694,21 @@ var Grid = function () {
             tile.inverted = tileData.inverted || false;
         });
     };
-    Grid.prototype.draw = function (buffer) {
+    Grid.prototype.export = function (sketch) {
+        var size = this.size;
+        var scale = config_1.renderSettings.scale;
+        var tileSize = config_1.renderSettings.tileSize;
+        sketch.resizeCanvas(size.x * scale * tileSize.x, size.y * scale * tileSize.y);
+        sketch.save('gridlock-map.png');
+        sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+    };
+    Grid.prototype.draw = function (sketch) {
         var _this = this;
         this.tiles.forEach(function (tile) {
             if (tile instanceof tile_1.Tile && tile.progress > 0) _this.calculateProgress(tile);
         });
         this.tiles.forEach(function (tile) {
-            tile.draw(buffer, _this);
+            tile.draw(sketch, _this);
         });
     };
     return Grid;
@@ -95719,13 +95727,13 @@ var Redirect = function () {
         this.position = position;
         this.tile = tile;
     }
-    Redirect.prototype.draw = function (buffer, grid) {
+    Redirect.prototype.draw = function (sketch, grid) {
         var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
         var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this.tile) {
-                this.tile.asset.drawConnection(buffer, { x: px, y: py }, direction, this.tile.progress, targetTile.progress);
+                this.tile.asset.drawConnection(sketch, { x: px, y: py }, direction, this.tile.progress, targetTile.progress);
             }
         }
     };
@@ -95743,14 +95751,14 @@ var Tile = function () {
         this.redirects = [];
         this.asset = new asset_1.TileAsset(size, logo);
     }
-    Tile.prototype.draw = function (buffer, grid) {
+    Tile.prototype.draw = function (sketch, grid) {
         var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
         var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
-        this.asset.drawTile(buffer, { x: px, y: py }, this.progress, this.inverted);
+        this.asset.drawTile(sketch, { x: px, y: py }, this.progress, this.inverted);
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this) {
-                this.asset.drawConnection(buffer, { x: px, y: py }, direction, this.progress, targetTile.progress);
+                this.asset.drawConnection(sketch, { x: px, y: py }, direction, this.progress, targetTile.progress);
             }
         }
     };
@@ -95951,6 +95959,11 @@ function sketchDefine(sketch) {
         sketch.clear();
         sketch.background(0);
         grid.draw(sketch);
+    };
+    sketch.mouseClicked = function () {
+        if (sketch.mouseButton == 'left') {
+            grid.export(sketch);
+        }
     };
 }
 new p5(sketchDefine).redraw();
