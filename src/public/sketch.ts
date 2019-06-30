@@ -1,6 +1,7 @@
 import p5 = require("p5");
-import { tileAssets } from "./config";
-import { newTileSpriteSheet } from "../entities/asset";
+import { Range } from "../lib/defines";
+import { tileAssets, connectionAssets } from "./config";
+import { newTileSpriteSheet, newConnectionSpriteSheet } from "../entities/asset";
 import { Grid } from "../entities/grid";
 
 process.env.NODE_ENV = 'development'
@@ -28,9 +29,17 @@ function sketchDefine(sketch: p5) {
     }
 
     sketch.preload = () => {
-        tileAssets.forEach(asset => {
-            sketch.loadImage(`assets/${asset.file}`,image => {
-                newTileSpriteSheet(image,asset)
+        tileAssets.forEach(config => {
+            sketch.loadImage(`assets/${config.file}`,image => {
+                newTileSpriteSheet(image,config)
+            })
+        })
+        connectionAssets.forEach(config => {
+            const range: Range = {minimum: config.min, maximum: config.max}
+            config.connections.forEach(connection => {
+                sketch.loadImage(`assets/${connection.file}`,image => {
+                    newConnectionSpriteSheet(image,range,connection)
+                })
             })
         })
     }

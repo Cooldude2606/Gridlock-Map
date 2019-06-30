@@ -92080,56 +92080,89 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", { value: true });
 var config_1 = require("../public/config");
 var log_1 = require("../lib/log");
-var spriteSheets = [];
-function newTileSpriteSheet(image, asset, logo) {
-    log_1.log.info("Loaded sprite sheet from: " + asset.file);
-    spriteSheets.push({
+var tileSpriteSheets = [];
+var connectionSpriteSheets = [];
+function newTileSpriteSheet(image, config, logo) {
+    log_1.log.info("Loaded sprite sheet from: " + config.file);
+    tileSpriteSheets.push({
         image: image,
         tileSize: {
-            x: asset.x,
-            y: asset.y
+            x: config.x,
+            y: config.y
         },
         assetSize: {
-            x: asset.x * config_1.renderSettings.tileSize.x,
-            y: asset.y * config_1.renderSettings.tileSize.y
+            x: config.x * config_1.renderSettings.tileSize.x,
+            y: config.y * config_1.renderSettings.tileSize.y
         },
         logo: logo
     });
 }
 exports.newTileSpriteSheet = newTileSpriteSheet;
+function newConnectionSpriteSheet(image, range, config) {
+    log_1.log.info("Loaded sprite sheet from: " + config.file);
+    var connections = connectionSpriteSheets.find(function (connection) {
+        return range.minimum == connection.range.minimum && range.maximum == connection.range.maximum;
+    });
+    if (!connections) {
+        connections = {
+            range: range,
+            connections: []
+        };
+        connectionSpriteSheets.push(connections);
+    }
+    connections.connections.push({
+        range: {
+            minimum: config.min,
+            maximum: config.max
+        },
+        image: image
+    });
+}
+exports.newConnectionSpriteSheet = newConnectionSpriteSheet;
 var TileAsset = function () {
     function TileAsset(size, logo) {
         this.size = size;
-        this.spriteSheet = spriteSheets.find(function (spriteSheet) {
-            if (spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y) {
-                return spriteSheet;
-            }
+        this.spriteSheet = tileSpriteSheets.find(function (spriteSheet) {
+            return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y;
         });
     }
-    TileAsset.prototype.draw = function (buffer, progress, inverted) {
+    TileAsset.prototype.drawTile = function (buffer, position, progress, inverted) {
         if (inverted === void 0) {
             inverted = false;
         }
+        var scale = config_1.renderSettings.scale;
         var assetSize = this.spriteSheet.assetSize;
         var sx = assetSize.x * progress;
         var sy = inverted ? assetSize.y : 0;
-        buffer.image(this.spriteSheet.image, 0, 0, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
+        log_1.log.debug("Rendered tile: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",p:" + progress + "}");
+        buffer.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+    };
+    TileAsset.prototype.drawConnection = function (buffer, position, direction, sourceProgress, targetProgress) {
+        var scale = config_1.renderSettings.scale;
+        var assetSize = config_1.renderSettings.tileSize;
+        var sx = assetSize.x * direction;
+        var sy = 0;
+        var spriteSheet = connectionSpriteSheets.find(function (spriteSheet) {
+            return sourceProgress >= spriteSheet.range.minimum && sourceProgress <= spriteSheet.range.maximum;
+        });
+        if (!spriteSheet) return;
+        var connection = spriteSheet.connections.find(function (connection) {
+            return targetProgress >= connection.range.minimum && targetProgress <= connection.range.maximum;
+        });
+        if (!connection) return;
+        log_1.log.debug("Rendered connection: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
+        buffer.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }();
 exports.TileAsset = TileAsset;
-var ConnectionAsset = function () {
-    function ConnectionAsset() {}
-    return ConnectionAsset;
-}();
-exports.ConnectionAsset = ConnectionAsset;
 
-},{"../lib/log":19,"../public/config":20}],17:[function(require,module,exports){
+},{"../lib/log":20,"../public/config":21}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tile_1 = require("./tile");
-var log_1 = require("../lib/log");
+var defines_1 = require("../lib/defines");
 var Grid = function () {
     function Grid() {
         this.tiles = [];
@@ -92153,40 +92186,46 @@ var Grid = function () {
         configurable: true
     });
     Grid.prototype.getTile = function (position) {
-        var tileCount = this.tiles.length;
-        for (var tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            var tile = this.tiles[tileIndex];
-            if (tile.position.x == position.x && tile.position.y == position.y) {
-                return tile instanceof tile_1.Redirect ? tile.tile : tile;
-            }
+        var tile = this.tiles.find(function (tile) {
+            return position.x == tile.position.x && position.y == tile.position.y;
+        });
+        return tile instanceof tile_1.Redirect ? tile.tile : tile;
+    };
+    Grid.prototype.getTileDirection = function (position, direction) {
+        switch (direction) {
+            case defines_1.Direction.up:
+                {
+                    return this.getTile({ x: position.x, y: position.y - 1 });
+                }
+            case defines_1.Direction.right:
+                {
+                    return this.getTile({ x: position.x + 1, y: position.y });
+                }
+            case defines_1.Direction.down:
+                {
+                    return this.getTile({ x: position.x, y: position.y + 1 });
+                }
+            case defines_1.Direction.left:
+                {
+                    return this.getTile({ x: position.x - 1, y: position.y });
+                }
         }
     };
     Grid.prototype.getAdjacentTiles = function (position) {
         var tile = this.getTile(position);
         var adjacent = [];
+        position = tile.position;
         function tileExists(grid, adjacent, position) {
             var adjacentTile = grid.getTile(position);
             if (adjacentTile) adjacent.push(adjacentTile);
         }
         for (var sx = 0; sx < tile.size.x; sx++) {
-            tileExists(this, adjacent, {
-                x: tile.position.x + sx,
-                y: tile.position.y - 1
-            });
-            tileExists(this, adjacent, {
-                x: tile.position.x + sx,
-                y: tile.position.y + tile.size.y
-            });
+            tileExists(this, adjacent, { x: position.x + sx, y: position.y - 1 });
+            tileExists(this, adjacent, { x: position.x + sx, y: position.y + tile.size.y });
         }
         for (var sy = 0; sy < tile.size.y; sy++) {
-            tileExists(this, adjacent, {
-                x: tile.position.x - 1,
-                y: tile.position.y + sy
-            });
-            tileExists(this, adjacent, {
-                x: tile.position.x + tile.size.x,
-                y: tile.position.y + sy
-            });
+            tileExists(this, adjacent, { x: position.x - 1, y: position.y + sy });
+            tileExists(this, adjacent, { x: position.x + tile.size.x, y: position.y + sy });
         }
         return adjacent;
     };
@@ -92242,21 +92281,20 @@ var Grid = function () {
         }
     };
     Grid.prototype.draw = function (buffer) {
+        var _this = this;
         this.tiles.forEach(function (tile) {
-            if (tile instanceof tile_1.Tile) {
-                log_1.log.debug("Rendered tile at: {" + tile.position.x + "," + tile.position.y + "}");
-                tile.draw(buffer);
-            }
+            tile.draw(buffer, _this);
         });
     };
     return Grid;
 }();
 exports.Grid = Grid;
 
-},{"../lib/log":19,"./tile":18}],18:[function(require,module,exports){
+},{"../lib/defines":19,"./tile":18}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var defines_1 = require("../lib/defines");
 var asset_1 = require("./asset");
 var config_1 = require("../public/config");
 var Redirect = function () {
@@ -92264,6 +92302,16 @@ var Redirect = function () {
         this.position = position;
         this.tile = tile;
     }
+    Redirect.prototype.draw = function (buffer, grid) {
+        var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
+        var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
+        for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
+            var targetTile = grid.getTileDirection(this.position, direction);
+            if (targetTile) {
+                this.tile.asset.drawConnection(buffer, { x: px, y: py }, direction, this.tile.progress, targetTile.progress);
+            }
+        }
+    };
     return Redirect;
 }();
 exports.Redirect = Redirect;
@@ -92271,25 +92319,39 @@ var Tile = function () {
     function Tile(position, size, logo) {
         this.position = position;
         this.size = size;
-        this.progress = 17;
+        this.progress = Math.round(Math.random() * 10 + 7);
         this.logo = logo;
         this.inverted = false;
         this.asset = new asset_1.TileAsset(size, logo);
     }
-    Tile.prototype.draw = function (buffer) {
-        var tileBuffer = buffer.createGraphics(config_1.renderSettings.tileSize.x * this.size.x, config_1.renderSettings.tileSize.y * this.size.y);
-        this.asset.draw(tileBuffer, this.progress, this.inverted);
-        var sx = config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
-        var sy = config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
-        var px = this.position.x * sx;
-        var py = this.position.y * sy;
-        buffer.image(tileBuffer, px, py, sx, sy);
+    Tile.prototype.draw = function (buffer, grid) {
+        var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
+        var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
+        this.asset.drawTile(buffer, { x: px, y: py }, this.progress, this.inverted);
+        for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
+            var targetTile = grid.getTileDirection(this.position, direction);
+            if (targetTile) {
+                this.asset.drawConnection(buffer, { x: px, y: py }, direction, this.progress, targetTile.progress);
+            }
+        }
     };
     return Tile;
 }();
 exports.Tile = Tile;
 
-},{"../public/config":20,"./asset":16}],19:[function(require,module,exports){
+},{"../lib/defines":19,"../public/config":21,"./asset":16}],19:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Direction;
+(function (Direction) {
+    Direction[Direction["up"] = 0] = "up";
+    Direction[Direction["right"] = 1] = "right";
+    Direction[Direction["down"] = 2] = "down";
+    Direction[Direction["left"] = 3] = "left";
+})(Direction = exports.Direction || (exports.Direction = {}));
+
+},{}],20:[function(require,module,exports){
 (function (process){
 "use strict";
 
@@ -92370,7 +92432,7 @@ var templateObject_1, templateObject_2, templateObject_3;
 
 }).call(this,require('_process'))
 
-},{"_process":14,"chalk":4,"moment":12}],20:[function(require,module,exports){
+},{"_process":14,"chalk":4,"moment":12}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -92382,8 +92444,9 @@ exports.renderSettings = {
     }
 };
 exports.tileAssets = [{ x: 1, y: 1, file: 'tile000.png' }, { x: 2, y: 1, file: 'tile001.png' }, { x: 1, y: 2, file: 'tile002.png' }, { x: 2, y: 2, file: 'tile003.png' }];
+exports.connectionAssets = [{ min: 7, max: 7, connections: [{ min: 0, max: 17, file: 'connection000.png' }] }, { min: 8, max: 16, connections: [{ min: 0, max: 16, file: 'connection000.png' }, { min: 17, max: 17, file: 'connection003.png' }] }, { min: 17, max: 17, connections: [{ min: 0, max: 7, file: 'connection000.png' }, { min: 8, max: 16, file: 'connection002.png' }, { min: 17, max: 17, file: 'connection001.png' }] }];
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (process){
 "use strict";
 
@@ -92410,9 +92473,17 @@ function sketchDefine(sketch) {
         }
     };
     sketch.preload = function () {
-        config_1.tileAssets.forEach(function (asset) {
-            sketch.loadImage("assets/" + asset.file, function (image) {
-                asset_1.newTileSpriteSheet(image, asset);
+        config_1.tileAssets.forEach(function (config) {
+            sketch.loadImage("assets/" + config.file, function (image) {
+                asset_1.newTileSpriteSheet(image, config);
+            });
+        });
+        config_1.connectionAssets.forEach(function (config) {
+            var range = { minimum: config.min, maximum: config.max };
+            config.connections.forEach(function (connection) {
+                sketch.loadImage("assets/" + connection.file, function (image) {
+                    asset_1.newConnectionSpriteSheet(image, range, connection);
+                });
             });
         });
     };
@@ -92426,6 +92497,6 @@ new p5(sketchDefine).redraw();
 
 }).call(this,require('_process'))
 
-},{"../entities/asset":16,"../entities/grid":17,"./config":20,"_process":14,"p5":13}]},{},[21])
+},{"../entities/asset":16,"../entities/grid":17,"./config":21,"_process":14,"p5":13}]},{},[22])
 
 //# sourceMappingURL=build.js.map

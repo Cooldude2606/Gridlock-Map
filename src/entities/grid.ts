@@ -1,5 +1,5 @@
 import { Tile, Redirect } from "./tile";
-import { Size, Position, ImageBuffer } from "../lib/defines";
+import { Size, Position, Direction } from "../lib/defines";
 import p5 = require("p5");
 import { log } from "../lib/log";
 
@@ -27,19 +27,34 @@ export class Grid {
     }
 
     getTile(position: Position): Tile {
-        const tileCount = this.tiles.length
-        for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            const tile = this.tiles[tileIndex]
-            if (tile.position.x == position.x && tile.position.y == position.y) {
-                return tile instanceof Redirect ? tile.tile : tile
+        const tile = this.tiles.find(tile => {
+            return position.x == tile.position.x && position.y == tile.position.y
+        })
+        return tile instanceof Redirect ? tile.tile : tile
+    }
+    
+    getTileDirection(position: Position, direction: Direction) {
+        switch (direction) {
+            case Direction.up: {
+                return this.getTile({x: position.x, y: position.y-1})
+            }
+            case Direction.right: {
+                return this.getTile({x: position.x+1, y: position.y})
+            }
+            case Direction.down: {
+                return this.getTile({x: position.x, y: position.y+1})
+            }
+            case Direction.left: {
+                return this.getTile({x: position.x-1, y: position.y})
             }
         }
     }
-    
+
     // gets an array of all the tiles that are around this tile
     getAdjacentTiles(position: Position): Array<Tile> {
         const tile = this.getTile(position)
         const adjacent: Array<Tile> = []
+        position = tile.position
 
         function tileExists(grid: Grid, adjacent: Array<Tile>, position: Position) {
             const adjacentTile = grid.getTile(position)
@@ -47,27 +62,13 @@ export class Grid {
         }
 
         for (let sx = 0; sx < tile.size.x; sx++) {
-            tileExists(this,adjacent,{
-                x: tile.position.x + sx,
-                y: tile.position.y - 1
-            })
-
-            tileExists(this,adjacent,{
-                x: tile.position.x + sx,
-                y: tile.position.y + tile.size.y
-            })
+            tileExists(this,adjacent,{x: position.x+sx, y: position.y-1})
+            tileExists(this,adjacent,{x: position.x+sx, y: position.y+tile.size.y})
         }
 
         for (let sy = 0; sy < tile.size.y; sy++) {
-            tileExists(this,adjacent,{
-                x: tile.position.x - 1,
-                y: tile.position.y + sy
-            })
-
-            tileExists(this,adjacent,{
-                x: tile.position.x + tile.size.x,
-                y: tile.position.y + sy
-            })
+            tileExists(this,adjacent,{x: position.x-1, y: position.y+sy})
+            tileExists(this,adjacent,{x: position.x+tile.size.x, y: position.y+sy})
         }
 
         return adjacent
@@ -133,12 +134,9 @@ export class Grid {
         }
     }
 
-    draw(buffer: ImageBuffer): void {
+    draw(buffer: p5): void {
         this.tiles.forEach(tile => {
-            if (tile instanceof Tile) {
-                log.debug(`Rendered tile at: {${tile.position.x},${tile.position.y}}`)
-                tile.draw(buffer)
-            }
+            tile.draw(buffer,this)
         })
     }
 

@@ -3,25 +3,47 @@ import p5 = require("p5");
 export type Dictionary = { [index: string]: any }
 
 export interface Range {
-    minimum: number,
+    minimum: number
     maximum: number
 }
 
+export enum Direction {
+    up,
+    right,
+    down,
+    left
+}
 export interface Position {
-    x: number,
+    x: number
     y: number
 }
 export interface Size {
-    x: number,
+    x: number
     y: number
 }
 
-export interface SpriteSheet {
-    image: p5.Image
-    tileSize: Size,
-    assetSize: Size,
-    logo?: string,
-    connection?: string
+export interface TileSpriteSheetConfig {
+    x: number
+    y: number
+    file: string
 }
 
-export type ImageBuffer = p5|p5.Renderer|p5.Graphics|any
+export interface TileSpriteSheet {
+    image: p5.Image
+    tileSize: Size
+    assetSize: Size
+    logo?: string
+}
+
+export interface ConnectionSpriteSheetConfig {
+    min: number
+    max: number
+    file: string
+}
+export interface ConnectionSpriteSheet {
+    range: Range
+    connections: Array<{
+        range: Range
+        image: p5.Image
+    }>
+}

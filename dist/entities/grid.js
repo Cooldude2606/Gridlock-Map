@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var tile_1 = require("./tile");
-var log_1 = require("../lib/log");
+var defines_1 = require("../lib/defines");
 var Grid = (function () {
     function Grid() {
         this.tiles = [];
@@ -25,41 +25,43 @@ var Grid = (function () {
         configurable: true
     });
     Grid.prototype.getTile = function (position) {
-        var tileCount = this.tiles.length;
-        for (var tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            var tile = this.tiles[tileIndex];
-            if (tile.position.x == position.x && tile.position.y == position.y) {
-                return tile instanceof tile_1.Redirect ? tile.tile : tile;
+        var tile = this.tiles.find(function (tile) {
+            return position.x == tile.position.x && position.y == tile.position.y;
+        });
+        return tile instanceof tile_1.Redirect ? tile.tile : tile;
+    };
+    Grid.prototype.getTileDirection = function (position, direction) {
+        switch (direction) {
+            case defines_1.Direction.up: {
+                return this.getTile({ x: position.x, y: position.y - 1 });
+            }
+            case defines_1.Direction.right: {
+                return this.getTile({ x: position.x + 1, y: position.y });
+            }
+            case defines_1.Direction.down: {
+                return this.getTile({ x: position.x, y: position.y + 1 });
+            }
+            case defines_1.Direction.left: {
+                return this.getTile({ x: position.x - 1, y: position.y });
             }
         }
     };
     Grid.prototype.getAdjacentTiles = function (position) {
         var tile = this.getTile(position);
         var adjacent = [];
+        position = tile.position;
         function tileExists(grid, adjacent, position) {
             var adjacentTile = grid.getTile(position);
             if (adjacentTile)
                 adjacent.push(adjacentTile);
         }
         for (var sx = 0; sx < tile.size.x; sx++) {
-            tileExists(this, adjacent, {
-                x: tile.position.x + sx,
-                y: tile.position.y - 1
-            });
-            tileExists(this, adjacent, {
-                x: tile.position.x + sx,
-                y: tile.position.y + tile.size.y
-            });
+            tileExists(this, adjacent, { x: position.x + sx, y: position.y - 1 });
+            tileExists(this, adjacent, { x: position.x + sx, y: position.y + tile.size.y });
         }
         for (var sy = 0; sy < tile.size.y; sy++) {
-            tileExists(this, adjacent, {
-                x: tile.position.x - 1,
-                y: tile.position.y + sy
-            });
-            tileExists(this, adjacent, {
-                x: tile.position.x + tile.size.x,
-                y: tile.position.y + sy
-            });
+            tileExists(this, adjacent, { x: position.x - 1, y: position.y + sy });
+            tileExists(this, adjacent, { x: position.x + tile.size.x, y: position.y + sy });
         }
         return adjacent;
     };
@@ -116,11 +118,9 @@ var Grid = (function () {
         }
     };
     Grid.prototype.draw = function (buffer) {
+        var _this = this;
         this.tiles.forEach(function (tile) {
-            if (tile instanceof tile_1.Tile) {
-                log_1.log.debug("Rendered tile at: {" + tile.position.x + "," + tile.position.y + "}");
-                tile.draw(buffer);
-            }
+            tile.draw(buffer, _this);
         });
     };
     return Grid;
