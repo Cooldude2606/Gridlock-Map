@@ -19,7 +19,7 @@ export class Redirect {
         const py = this.position.y*renderSettings.tileSize.y*renderSettings.scale
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
-            if (targetTile) {
+            if (targetTile && targetTile !== this.tile) {
                 this.tile.asset.drawConnection(buffer,{x:px,y:py},direction,this.tile.progress,targetTile.progress)
             }
         }
@@ -40,9 +40,14 @@ export class Tile {
     constructor(position: Position, size: Size, logo?: string) {
         this.position = position
         this.size = size
-        this.progress = Math.round(Math.random()*10+7)
+        switch (Math.round(Math.random()*2)) {
+            case 0: this.progress = 7; break
+            case 1: this.progress = 8; break
+            case 2: this.progress = 17; break
+        }
         this.logo = logo
         this.inverted = false
+        this.redirects = []
         this.asset = new TileAsset(size,logo)
     }
 
@@ -52,7 +57,7 @@ export class Tile {
         this.asset.drawTile(buffer,{x:px,y:py},this.progress,this.inverted)
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
-            if (targetTile) {
+            if (targetTile && targetTile !== this) {
                 this.asset.drawConnection(buffer,{x:px,y:py},direction,this.progress,targetTile.progress)
             }
         }

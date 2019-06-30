@@ -47,3 +47,11 @@ export interface ConnectionSpriteSheet {
         image: p5.Image
     }>
 }
+
+export interface TileExport {
+    position: Position
+    size: Size
+    progress?: number
+    inverted?: boolean
+    logo?: string
+}

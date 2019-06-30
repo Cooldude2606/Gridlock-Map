@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var tile_1 = require("./tile");
 var defines_1 = require("../lib/defines");
+var log_1 = require("../lib/log");
 var Grid = (function () {
     function Grid() {
         this.tiles = [];
@@ -103,12 +104,12 @@ var Grid = (function () {
         tile.redirects.push(redirect);
         this.tiles.push(redirect);
     };
-    Grid.prototype.newTile = function (position, size) {
-        var tile = new tile_1.Tile(position, size);
+    Grid.prototype.newTile = function (position, size, logo) {
+        var tile = new tile_1.Tile(position, size, logo);
         this.tiles.push(tile);
         for (var sx = 0; sx < size.x; sx++) {
             for (var sy = 0; sy < size.y; sy++) {
-                if (sx != 0 && sy != 0) {
+                if (!(sx == 0 && sy == 0)) {
                     this.newRedirect({
                         x: position.x + sx,
                         y: position.y + sy
@@ -116,6 +117,17 @@ var Grid = (function () {
                 }
             }
         }
+        return tile;
+    };
+    Grid.prototype.load = function (data) {
+        var _this = this;
+        log_1.log.debug('Loading new map data');
+        this.tiles = [];
+        data.forEach(function (tileData) {
+            var tile = _this.newTile(tileData.position, tileData.size, tileData.logo);
+            tile.progress = tileData.progress || 17;
+            tile.inverted = tileData.inverted || false;
+        });
     };
     Grid.prototype.draw = function (buffer) {
         var _this = this;

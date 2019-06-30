@@ -45,7 +45,7 @@ var TileAsset = (function () {
     function TileAsset(size, logo) {
         this.size = size;
         this.spriteSheet = tileSpriteSheets.find(function (spriteSheet) {
-            return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y;
+            return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo;
         });
     }
     TileAsset.prototype.drawTile = function (buffer, position, progress, inverted) {

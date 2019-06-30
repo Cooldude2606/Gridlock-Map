@@ -51,7 +51,7 @@ export class TileAsset {
     constructor(size: Size, logo?: string) {
         this.size = size
         this.spriteSheet = tileSpriteSheets.find(spriteSheet => {
-            return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y
+            return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo
         })
     }
 

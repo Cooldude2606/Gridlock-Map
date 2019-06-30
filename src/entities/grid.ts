@@ -1,5 +1,5 @@
 import { Tile, Redirect } from "./tile";
-import { Size, Position, Direction } from "../lib/defines";
+import { Size, Position, Direction, TileExport } from "../lib/defines";
 import p5 = require("p5");
 import { log } from "../lib/log";
 
@@ -119,12 +119,12 @@ export class Grid {
     }
 
     // makes a new tile at this postion, adds redirects where needed
-    newTile(position: Position, size: Size): void {
-        const tile = new Tile(position,size)
+    newTile(position: Position, size: Size, logo?: string): Tile {
+        const tile = new Tile(position,size,logo)
         this.tiles.push(tile)
         for (let sx = 0; sx < size.x; sx++) {
             for (let sy = 0; sy < size.y; sy++) {
-                if (sx != 0 && sy != 0) {
+                if (!(sx == 0 && sy == 0)) {
                     this.newRedirect({
                         x: position.x + sx,
                         y: position.y + sy
@@ -132,6 +132,17 @@ export class Grid {
                 }
             }
         }
+        return tile
+    }
+
+    load(data: Array<TileExport>): void {
+        log.debug('Loading new map data')
+        this.tiles = []
+        data.forEach(tileData => {
+            const tile = this.newTile(tileData.position,tileData.size,tileData.logo)
+            tile.progress = tileData.progress || 17
+            tile.inverted = tileData.inverted || false
+        })
     }
 
     draw(buffer: p5): void {

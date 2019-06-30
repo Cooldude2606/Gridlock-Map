@@ -13,7 +13,7 @@ var Redirect = (function () {
         var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
-            if (targetTile) {
+            if (targetTile && targetTile !== this.tile) {
                 this.tile.asset.drawConnection(buffer, { x: px, y: py }, direction, this.tile.progress, targetTile.progress);
             }
         }
@@ -25,9 +25,20 @@ var Tile = (function () {
     function Tile(position, size, logo) {
         this.position = position;
         this.size = size;
-        this.progress = Math.round(Math.random() * 10 + 7);
+        switch (Math.round(Math.random() * 2)) {
+            case 0:
+                this.progress = 7;
+                break;
+            case 1:
+                this.progress = 8;
+                break;
+            case 2:
+                this.progress = 17;
+                break;
+        }
         this.logo = logo;
         this.inverted = false;
+        this.redirects = [];
         this.asset = new asset_1.TileAsset(size, logo);
     }
     Tile.prototype.draw = function (buffer, grid) {
@@ -36,7 +47,7 @@ var Tile = (function () {
         this.asset.drawTile(buffer, { x: px, y: py }, this.progress, this.inverted);
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
-            if (targetTile) {
+            if (targetTile && targetTile !== this) {
                 this.asset.drawConnection(buffer, { x: px, y: py }, direction, this.progress, targetTile.progress);
             }
         }
