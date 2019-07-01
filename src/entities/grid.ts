@@ -1,30 +1,36 @@
-import { Tile, Redirect } from "./tile";
-import { Size, Position, Direction, TileImport } from "../lib/defines";
 import p5 = require("p5");
 import { log } from "../lib/log";
-import { progressCalculations, renderSettings } from "../public/config";
+import { Tile, Redirect } from "./tile";
+import { Size, Position, Direction, TileImport, Area } from "../lib/defines";
+import { progressCalculations, renderSettings, tileToPixel } from "../public/config";
 
 export class Grid {
 
     tiles: Array<Tile|Redirect>
+    buffer: p5.Graphics|any
 
     constructor() {
         this.tiles = []
     }
 
+    get area(): Area {
+        const area: Area = {topLeft:{x:0,y:0},bottomRight:{x:0,y:0}}
+        this.tiles.forEach(tile => {
+            const pos = tile.position
+            if (pos.x < area.topLeft.x) area.topLeft.x = pos.x
+            if (pos.x > area.bottomRight.x) area.bottomRight.x = pos.x
+            if (pos.y < area.topLeft.y) area.topLeft.y = pos.y
+            if (pos.y > area.bottomRight.y) area.bottomRight.y = pos.y
+        })
+        return area
+    }
+
     get size(): Size {
-        const size: Size = {x:0,y:0}
-        const tileCount = this.tiles.length
-        for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-            const tile = this.tiles[tileIndex]
-            if (size.x < tile.position.x) {
-                size.x = tile.position.x
-            }
-            if (size.y < tile.position.y) {
-                size.y = tile.position.y
-            }
+        const area = this.area
+        return {
+            x: area.bottomRight.x-area.topLeft.x,
+            y: area.bottomRight.y-area.topLeft.y
         }
-        return size
     }
 
     getTile(position: Position): Tile {
@@ -104,21 +110,22 @@ export class Grid {
 
         for (let currentIndex = 0; currentIndex < queue.length; currentIndex++) {
             const tile = queue[currentIndex]
+            const adjacent = this.getAdjacentTiles(tile.position)
+            let newProgress = tile.progress
 
-            if (queue.indexOf(tile) >= currentIndex) {
-                const adjacent = this.getAdjacentTiles(tile.position)
-                let newProgress = tile.progress
-
-                adjacent.forEach(adjacentTile => {
-                    queue.push(adjacentTile)
-                    const calc = progressCalculations.find(calcs => {
-                        return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max
-                    })
-                    const rtn = calc.rtn(adjacentTile.progress)
-                    if (newProgress < rtn)  newProgress = rtn
+            adjacent.forEach(adjacentTile => {
+                const calc = progressCalculations.find(calcs => {
+                    return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max
                 })
+                const rtn = calc.rtn(adjacentTile.progress)
+                if (newProgress < rtn)  newProgress = rtn
+            })
 
-                tile.progress = newProgress < 0 ? 0 : newProgress
+            tile.progress = newProgress < 0 ? 0 : newProgress
+            if (tile.progress > 0) {
+                adjacent.forEach(adjacentTile => {
+                    if (!queue.includes(adjacentTile)) queue.push(adjacentTile)
+                })
             }
 
         }
@@ -136,22 +143,35 @@ export class Grid {
     }
 
     export(sketch: p5): void {
-        const size = this.size
-        const scale = renderSettings.scale
-        const tileSize = renderSettings.tileSize
-        sketch.resizeCanvas(size.x*scale*tileSize.x,size.y*scale*tileSize.y)
+        const size = tileToPixel(this.size)
+        sketch.resizeCanvas(size.x,size.y)
         sketch.save('gridlock-map.png')
         sketch.resizeCanvas(sketch.windowWidth,sketch.windowHeight)
     }
 
-    draw(sketch: p5): void {
+    newBuffer(sketch: p5, scale: number = renderSettings.scale): void {
+        const size = tileToPixel(this.size)
+        this.buffer = sketch.createGraphics(size.x*scale,size.y*scale)
+        this.buffer.scale(scale)
+
+        const context = this.buffer.elt.getContext('2d');
+        context.imageSmoothingEnabled = false;
+
         this.tiles.forEach(tile => {
             if (tile instanceof Tile && tile.progress > 0) this.calculateProgress(tile)
         })
 
         this.tiles.forEach(tile => {
-            tile.draw(sketch,this)
+            tile.draw(this.buffer,this)
         })
+
+    }
+
+    draw(sketch: p5, position: Position): void {
+        if (!this.buffer) this.newBuffer(sketch)
+
+        const size = tileToPixel(this.size)
+        sketch.image(this.buffer,position.x-size.x,position.y-size.y)
     }
 
 }

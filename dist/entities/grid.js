@@ -1,27 +1,39 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var log_1 = require("../lib/log");
 var tile_1 = require("./tile");
 var defines_1 = require("../lib/defines");
-var log_1 = require("../lib/log");
 var config_1 = require("../public/config");
 var Grid = (function () {
     function Grid() {
         this.tiles = [];
     }
+    Object.defineProperty(Grid.prototype, "area", {
+        get: function () {
+            var area = { topLeft: { x: 0, y: 0 }, bottomRight: { x: 0, y: 0 } };
+            this.tiles.forEach(function (tile) {
+                var pos = tile.position;
+                if (pos.x < area.topLeft.x)
+                    area.topLeft.x = pos.x;
+                if (pos.x > area.bottomRight.x)
+                    area.bottomRight.x = pos.x;
+                if (pos.y < area.topLeft.y)
+                    area.topLeft.y = pos.y;
+                if (pos.y > area.bottomRight.y)
+                    area.bottomRight.y = pos.y;
+            });
+            return area;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(Grid.prototype, "size", {
         get: function () {
-            var size = { x: 0, y: 0 };
-            var tileCount = this.tiles.length;
-            for (var tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-                var tile = this.tiles[tileIndex];
-                if (size.x < tile.position.x) {
-                    size.x = tile.position.x;
-                }
-                if (size.y < tile.position.y) {
-                    size.y = tile.position.y;
-                }
-            }
-            return size;
+            var area = this.area;
+            return {
+                x: area.bottomRight.x - area.topLeft.x,
+                y: area.bottomRight.y - area.topLeft.y
+            };
         },
         enumerable: true,
         configurable: true
@@ -91,19 +103,22 @@ var Grid = (function () {
         var queue = [startTile];
         var _loop_1 = function (currentIndex) {
             var tile = queue[currentIndex];
-            if (queue.indexOf(tile) >= currentIndex) {
-                var adjacent = this_1.getAdjacentTiles(tile.position);
-                var newProgress_1 = tile.progress;
-                adjacent.forEach(function (adjacentTile) {
-                    queue.push(adjacentTile);
-                    var calc = config_1.progressCalculations.find(function (calcs) {
-                        return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
-                    });
-                    var rtn = calc.rtn(adjacentTile.progress);
-                    if (newProgress_1 < rtn)
-                        newProgress_1 = rtn;
+            var adjacent = this_1.getAdjacentTiles(tile.position);
+            var newProgress = tile.progress;
+            adjacent.forEach(function (adjacentTile) {
+                var calc = config_1.progressCalculations.find(function (calcs) {
+                    return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
                 });
-                tile.progress = newProgress_1 < 0 ? 0 : newProgress_1;
+                var rtn = calc.rtn(adjacentTile.progress);
+                if (newProgress < rtn)
+                    newProgress = rtn;
+            });
+            tile.progress = newProgress < 0 ? 0 : newProgress;
+            if (tile.progress > 0) {
+                adjacent.forEach(function (adjacentTile) {
+                    if (!queue.includes(adjacentTile))
+                        queue.push(adjacentTile);
+                });
             }
         };
         var this_1 = this;
@@ -122,22 +137,32 @@ var Grid = (function () {
         });
     };
     Grid.prototype.export = function (sketch) {
-        var size = this.size;
-        var scale = config_1.renderSettings.scale;
-        var tileSize = config_1.renderSettings.tileSize;
-        sketch.resizeCanvas(size.x * scale * tileSize.x, size.y * scale * tileSize.y);
+        var size = config_1.tileToPixel(this.size);
+        sketch.resizeCanvas(size.x, size.y);
         sketch.save('gridlock-map.png');
         sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
     };
-    Grid.prototype.draw = function (sketch) {
+    Grid.prototype.newBuffer = function (sketch, scale) {
         var _this = this;
+        if (scale === void 0) { scale = config_1.renderSettings.scale; }
+        var size = config_1.tileToPixel(this.size);
+        this.buffer = sketch.createGraphics(size.x * scale, size.y * scale);
+        this.buffer.scale(scale);
+        var context = this.buffer.elt.getContext('2d');
+        context.imageSmoothingEnabled = false;
         this.tiles.forEach(function (tile) {
             if (tile instanceof tile_1.Tile && tile.progress > 0)
                 _this.calculateProgress(tile);
         });
         this.tiles.forEach(function (tile) {
-            tile.draw(sketch, _this);
+            tile.draw(_this.buffer, _this);
         });
+    };
+    Grid.prototype.draw = function (sketch, position) {
+        if (!this.buffer)
+            this.newBuffer(sketch);
+        var size = config_1.tileToPixel(this.size);
+        sketch.image(this.buffer, position.x - size.x, position.y - size.y);
     };
     return Grid;
 }());

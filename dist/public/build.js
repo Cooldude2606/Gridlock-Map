@@ -95540,15 +95540,15 @@ var TileAsset = function () {
         if (inverted === void 0) {
             inverted = false;
         }
-        var scale = config_1.renderSettings.scale;
+        var pixelPosition = config_1.tileToPixel(position);
         var assetSize = this.spriteSheet.assetSize;
         var sx = assetSize.x * progress;
         var sy = inverted ? assetSize.y : 0;
-        log_1.log.debug("Rendered tile: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",p:" + progress + "}");
-        sketch.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        log_1.log.debug("Rendered tile: {x:" + position.x + ",y:" + position.y + ",p:" + progress + "}");
+        sketch.image(this.spriteSheet.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
     TileAsset.prototype.drawConnection = function (sketch, position, direction, sourceProgress, targetProgress) {
-        var scale = config_1.renderSettings.scale;
+        var pixelPosition = config_1.tileToPixel(position);
         var assetSize = config_1.renderSettings.tileSize;
         var sx = assetSize.x * direction;
         var sy = 0;
@@ -95560,8 +95560,8 @@ var TileAsset = function () {
             return targetProgress >= connection.range.minimum && targetProgress <= connection.range.maximum;
         });
         if (!connection) return;
-        log_1.log.debug("Rendered connection: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
-        sketch.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        log_1.log.debug("Rendered connection: {x:" + position.x + ",y:" + position.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
+        sketch.image(connection.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }();
@@ -95571,28 +95571,36 @@ exports.TileAsset = TileAsset;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var log_1 = require("../lib/log");
 var tile_1 = require("./tile");
 var defines_1 = require("../lib/defines");
-var log_1 = require("../lib/log");
 var config_1 = require("../public/config");
 var Grid = function () {
     function Grid() {
         this.tiles = [];
     }
+    Object.defineProperty(Grid.prototype, "area", {
+        get: function get() {
+            var area = { topLeft: { x: 0, y: 0 }, bottomRight: { x: 0, y: 0 } };
+            this.tiles.forEach(function (tile) {
+                var pos = tile.position;
+                if (pos.x < area.topLeft.x) area.topLeft.x = pos.x;
+                if (pos.x > area.bottomRight.x) area.bottomRight.x = pos.x;
+                if (pos.y < area.topLeft.y) area.topLeft.y = pos.y;
+                if (pos.y > area.bottomRight.y) area.bottomRight.y = pos.y;
+            });
+            return area;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(Grid.prototype, "size", {
         get: function get() {
-            var size = { x: 0, y: 0 };
-            var tileCount = this.tiles.length;
-            for (var tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-                var tile = this.tiles[tileIndex];
-                if (size.x < tile.position.x) {
-                    size.x = tile.position.x;
-                }
-                if (size.y < tile.position.y) {
-                    size.y = tile.position.y;
-                }
-            }
-            return size;
+            var area = this.area;
+            return {
+                x: area.bottomRight.x - area.topLeft.x,
+                y: area.bottomRight.y - area.topLeft.y
+            };
         },
         enumerable: true,
         configurable: true
@@ -95665,18 +95673,20 @@ var Grid = function () {
         var queue = [startTile];
         var _loop_1 = function _loop_1(currentIndex) {
             var tile = queue[currentIndex];
-            if (queue.indexOf(tile) >= currentIndex) {
-                var adjacent = this_1.getAdjacentTiles(tile.position);
-                var newProgress_1 = tile.progress;
-                adjacent.forEach(function (adjacentTile) {
-                    queue.push(adjacentTile);
-                    var calc = config_1.progressCalculations.find(function (calcs) {
-                        return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
-                    });
-                    var rtn = calc.rtn(adjacentTile.progress);
-                    if (newProgress_1 < rtn) newProgress_1 = rtn;
+            var adjacent = this_1.getAdjacentTiles(tile.position);
+            var newProgress = tile.progress;
+            adjacent.forEach(function (adjacentTile) {
+                var calc = config_1.progressCalculations.find(function (calcs) {
+                    return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
                 });
-                tile.progress = newProgress_1 < 0 ? 0 : newProgress_1;
+                var rtn = calc.rtn(adjacentTile.progress);
+                if (newProgress < rtn) newProgress = rtn;
+            });
+            tile.progress = newProgress < 0 ? 0 : newProgress;
+            if (tile.progress > 0) {
+                adjacent.forEach(function (adjacentTile) {
+                    if (!queue.includes(adjacentTile)) queue.push(adjacentTile);
+                });
             }
         };
         var this_1 = this;
@@ -95695,21 +95705,32 @@ var Grid = function () {
         });
     };
     Grid.prototype.export = function (sketch) {
-        var size = this.size;
-        var scale = config_1.renderSettings.scale;
-        var tileSize = config_1.renderSettings.tileSize;
-        sketch.resizeCanvas(size.x * scale * tileSize.x, size.y * scale * tileSize.y);
+        var size = config_1.tileToPixel(this.size);
+        sketch.resizeCanvas(size.x, size.y);
         sketch.save('gridlock-map.png');
         sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
     };
-    Grid.prototype.draw = function (sketch) {
+    Grid.prototype.newBuffer = function (sketch, scale) {
         var _this = this;
+        if (scale === void 0) {
+            scale = config_1.renderSettings.scale;
+        }
+        var size = config_1.tileToPixel(this.size);
+        this.buffer = sketch.createGraphics(size.x * scale, size.y * scale);
+        this.buffer.scale(scale);
+        var context = this.buffer.elt.getContext('2d');
+        context.imageSmoothingEnabled = false;
         this.tiles.forEach(function (tile) {
             if (tile instanceof tile_1.Tile && tile.progress > 0) _this.calculateProgress(tile);
         });
         this.tiles.forEach(function (tile) {
-            tile.draw(sketch, _this);
+            tile.draw(_this.buffer, _this);
         });
+    };
+    Grid.prototype.draw = function (sketch, position) {
+        if (!this.buffer) this.newBuffer(sketch);
+        var size = config_1.tileToPixel(this.size);
+        sketch.image(this.buffer, position.x - size.x, position.y - size.y);
     };
     return Grid;
 }();
@@ -95719,9 +95740,9 @@ exports.Grid = Grid;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var defines_1 = require("../lib/defines");
 var asset_1 = require("./asset");
 var config_1 = require("../public/config");
+var defines_1 = require("../lib/defines");
 var Redirect = function () {
     function Redirect(position, tile) {
         this.position = position;
@@ -95752,13 +95773,11 @@ var Tile = function () {
         this.asset = new asset_1.TileAsset(size, logo);
     }
     Tile.prototype.draw = function (sketch, grid) {
-        var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
-        var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
-        this.asset.drawTile(sketch, { x: px, y: py }, this.progress, this.inverted);
+        this.asset.drawTile(sketch, this.position, this.progress, this.inverted);
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this) {
-                this.asset.drawConnection(sketch, { x: px, y: py }, direction, this.progress, targetTile.progress);
+                this.asset.drawConnection(sketch, this.position, direction, this.progress, targetTile.progress);
             }
         }
     };
@@ -95860,9 +95879,11 @@ var templateObject_1, templateObject_2, templateObject_3;
 }).call(this,require('_process'))
 
 },{"_process":15,"chalk":4,"moment":12}],22:[function(require,module,exports){
+(function (process){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+process.env.NODE_ENV = 'development';
 exports.renderSettings = {
     scale: 2,
     tileSize: {
@@ -95870,6 +95891,20 @@ exports.renderSettings = {
         y: 26
     }
 };
+function tileToPixel(data) {
+    return {
+        x: data.x * exports.renderSettings.tileSize.x,
+        y: data.y * exports.renderSettings.tileSize.y
+    };
+}
+exports.tileToPixel = tileToPixel;
+function PixelToTile(data) {
+    return {
+        x: data.x / exports.renderSettings.tileSize.x,
+        y: data.y / exports.renderSettings.tileSize.y
+    };
+}
+exports.PixelToTile = PixelToTile;
 exports.tileAssets = [{ x: 1, y: 1, file: 'tile000.png' }, { x: 2, y: 1, file: 'tile001.png' }, { x: 1, y: 2, file: 'tile002.png' }, { x: 2, y: 2, file: 'tile003.png' }];
 exports.logoAssets = {
     redmew: 'logo000.png',
@@ -95896,7 +95931,10 @@ exports.progressCalculations = [{ min: 0, max: 6, rtn: function rtn(p) {
     } }];
 exports.connectionAssets = [{ min: 7, max: 7, connections: [{ min: 0, max: 17, file: 'connection000.png' }] }, { min: 8, max: 16, connections: [{ min: 0, max: 16, file: 'connection000.png' }, { min: 17, max: 17, file: 'connection003.png' }] }, { min: 17, max: 17, connections: [{ min: 0, max: 7, file: 'connection000.png' }, { min: 8, max: 16, file: 'connection002.png' }, { min: 17, max: 17, file: 'connection001.png' }] }];
 
-},{}],23:[function(require,module,exports){
+}).call(this,require('_process'))
+
+},{"_process":15}],23:[function(require,module,exports){
+(function (process){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -95908,9 +95946,12 @@ var grid_1 = require("../entities/grid");
 function sketchDefine(sketch) {
     var grid = new grid_1.Grid();
     var canvas;
+    var center;
+    var offset = { x: 0, y: 0 };
+    var scale = config_1.renderSettings.scale;
     sketch.setup = function () {
         canvas = sketch.createCanvas(sketch.windowWidth, sketch.windowHeight);
-        sketch.noLoop();
+        sketch.frameRate(25);
         canvas.drop(function (file) {
             if (file.subtype == 'json') {
                 sketch.loadJSON(file.data, function (data) {
@@ -95921,9 +95962,17 @@ function sketchDefine(sketch) {
         });
         var context = canvas.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
-        for (var x = 0; x < 15; x++) {
-            for (var y = 0; y < 15; y++) {
-                grid.newTile({ x: x, y: y }, { x: 1, y: 1 });
+        center = { x: sketch.windowWidth / 2, y: sketch.windowHeight / 2 };
+        if (process.env.NODE_ENV === 'production') {
+            sketch.loadJSON('assets/map.json', function (data) {
+                grid.load(data);
+                sketch.redraw();
+            });
+        } else {
+            for (var x = 0; x < 15; x++) {
+                for (var y = 0; y < 15; y++) {
+                    grid.newTile({ x: x, y: y }, { x: 1, y: 1 });
+                }
             }
         }
     };
@@ -95956,18 +96005,34 @@ function sketchDefine(sketch) {
         });
     };
     sketch.draw = function () {
-        sketch.clear();
         sketch.background(0);
-        grid.draw(sketch);
+        grid.draw(sketch, center);
     };
-    sketch.mouseClicked = function () {
+    sketch.doubleClicked = function () {
         if (sketch.mouseButton == 'left') {
             grid.export(sketch);
         }
     };
+    sketch.mousePressed = function () {
+        offset.x = sketch.mouseX - center.x;
+        offset.y = sketch.mouseY - center.y;
+    };
+    sketch.mouseDragged = function () {
+        center.x = sketch.mouseX - offset.x;
+        center.y = sketch.mouseY - offset.y;
+    };
+    sketch.mouseWheel = function (event) {
+        scale -= event.delta / 25;
+        grid.newBuffer(sketch, scale);
+    };
+    sketch.windowResized = function () {
+        sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+    };
 }
-new p5(sketchDefine).redraw();
+new p5(sketchDefine);
 
-},{"../entities/asset":17,"../entities/grid":18,"./config":22,"p5":14,"p5/lib/addons/p5.dom":13}]},{},[23])
+}).call(this,require('_process'))
+
+},{"../entities/asset":17,"../entities/grid":18,"./config":22,"_process":15,"p5":14,"p5/lib/addons/p5.dom":13}]},{},[23])
 
 //# sourceMappingURL=build.js.map

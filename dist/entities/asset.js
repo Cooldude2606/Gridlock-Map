@@ -50,15 +50,15 @@ var TileAsset = (function () {
     }
     TileAsset.prototype.drawTile = function (sketch, position, progress, inverted) {
         if (inverted === void 0) { inverted = false; }
-        var scale = config_1.renderSettings.scale;
+        var pixelPosition = config_1.tileToPixel(position);
         var assetSize = this.spriteSheet.assetSize;
         var sx = assetSize.x * progress;
         var sy = inverted ? assetSize.y : 0;
-        log_1.log.debug("Rendered tile: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",p:" + progress + "}");
-        sketch.image(this.spriteSheet.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        log_1.log.debug("Rendered tile: {x:" + position.x + ",y:" + position.y + ",p:" + progress + "}");
+        sketch.image(this.spriteSheet.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
     TileAsset.prototype.drawConnection = function (sketch, position, direction, sourceProgress, targetProgress) {
-        var scale = config_1.renderSettings.scale;
+        var pixelPosition = config_1.tileToPixel(position);
         var assetSize = config_1.renderSettings.tileSize;
         var sx = assetSize.x * direction;
         var sy = 0;
@@ -72,8 +72,8 @@ var TileAsset = (function () {
         });
         if (!connection)
             return;
-        log_1.log.debug("Rendered connection: {x:" + position.x / scale / assetSize.x + ",y:" + position.y / scale / assetSize.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
-        sketch.image(connection.image, position.x, position.y, assetSize.x * scale, assetSize.y * scale, sx, sy, assetSize.x, assetSize.y);
+        log_1.log.debug("Rendered connection: {x:" + position.x + ",y:" + position.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
+        sketch.image(connection.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }());

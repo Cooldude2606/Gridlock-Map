@@ -1,12 +1,26 @@
-import { Dictionary } from "../lib/defines";
+import { Dictionary, Size, Position } from "../lib/defines";
 
-//process.env.NODE_ENV = 'development'
+process.env.NODE_ENV = 'development'
 
 export const renderSettings = {
     scale: 2,
     tileSize: {
         x: 26,
         y: 26
+    }
+}
+
+export function tileToPixel(data: Size|Position): Size|Position {
+    return {
+        x: data.x*renderSettings.tileSize.x,
+        y: data.y*renderSettings.tileSize.y
+    }
+}
+
+export function PixelToTile(data: Size|Position): Size|Position {
+    return {
+        x: data.x/(renderSettings.tileSize.x),
+        y: data.y/(renderSettings.tileSize.y)
     }
 }
 

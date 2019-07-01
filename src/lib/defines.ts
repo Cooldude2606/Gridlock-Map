@@ -22,6 +22,11 @@ export interface Size {
     y: number
 }
 
+export interface Area {
+    topLeft: Position
+    bottomRight: Position
+}
+
 export interface TileSpriteSheetConfig {
     x: number
     y: number

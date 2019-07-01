@@ -1,5 +1,5 @@
 import { TileSpriteSheet, Size, Position, Range, ConnectionSpriteSheet, TileSpriteSheetConfig, ConnectionSpriteSheetConfig, Direction } from '../lib/defines'
-import { renderSettings } from "../public/config";
+import { renderSettings, tileToPixel } from "../public/config";
 import { log } from '../lib/log';
 import p5 = require('p5');
 
@@ -56,16 +56,16 @@ export class TileAsset {
     }
 
     drawTile(sketch: p5, position: Position, progress: number, inverted: boolean = false) {
-        const scale = renderSettings.scale
+        const pixelPosition = tileToPixel(position)
         const assetSize = this.spriteSheet.assetSize
         const sx = assetSize.x*progress
         const sy = inverted ? assetSize.y : 0
-        log.debug(`Rendered tile: {x:${position.x/scale/assetSize.x},y:${position.y/scale/assetSize.y},p:${progress}}`)
-        sketch.image(this.spriteSheet.image,position.x,position.y,assetSize.x*scale,assetSize.y*scale,sx,sy,assetSize.x,assetSize.y)
+        log.debug(`Rendered tile: {x:${position.x},y:${position.y},p:${progress}}`)
+        sketch.image(this.spriteSheet.image,pixelPosition.x,pixelPosition.y,assetSize.x,assetSize.y,sx,sy,assetSize.x,assetSize.y)
     }
 
     drawConnection(sketch: p5, position: Position, direction: Direction, sourceProgress: number, targetProgress: number) {
-        const scale = renderSettings.scale
+        const pixelPosition = tileToPixel(position)
         const assetSize = renderSettings.tileSize
         const sx = assetSize.x*direction
         const sy = 0
@@ -77,8 +77,8 @@ export class TileAsset {
             return targetProgress >= connection.range.minimum && targetProgress <= connection.range.maximum 
         })
         if (!connection) return
-        log.debug(`Rendered connection: {x:${position.x/scale/assetSize.x},y:${position.y/scale/assetSize.y},d:${direction},sp:${sourceProgress},tp:${targetProgress}}`)
-        sketch.image(connection.image,position.x,position.y,assetSize.x*scale,assetSize.y*scale,sx,sy,assetSize.x,assetSize.y)
+        log.debug(`Rendered connection: {x:${position.x},y:${position.y},d:${direction},sp:${sourceProgress},tp:${targetProgress}}`)
+        sketch.image(connection.image,pixelPosition.x,pixelPosition.y,assetSize.x,assetSize.y,sx,sy,assetSize.x,assetSize.y)
     }
 
 }

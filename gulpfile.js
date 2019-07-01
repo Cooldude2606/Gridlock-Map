@@ -7,13 +7,20 @@ var tsify = require('tsify');
 var sourcemaps = require('gulp-sourcemaps');
 var buffer = require('vinyl-buffer');
 var paths = {
-    pages: ['src/**/*.html']
+    pages: ['src/**/*.html'],
+    assets: ['src/assets/**/*']
 };
 
 gulp.task('build-html', () => {
     return gulp.src(paths.pages)
         .pipe(gulp.dest('dist'));
 });
+
+gulp.task('build-assets', () => {
+    return gulp.src(paths.assets)
+        .pipe(gulp.dest('dist/public/assets'));
+});
+
 
 gulp.task('build-server', function () {
     return tsProject.src()
@@ -44,6 +51,7 @@ gulp.task('build-public', () => {
 
 gulp.task('default', gulp.series(
     gulp.parallel('build-html'),
+    gulp.parallel('build-assets'),
     gulp.parallel('build-server'),
     gulp.parallel('build-public'),
 ));
