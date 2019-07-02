@@ -48,17 +48,18 @@ var TileAsset = (function () {
             return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo;
         });
     }
-    TileAsset.prototype.drawTile = function (sketch, position, progress, inverted) {
+    TileAsset.prototype.drawTile = function (sketch, progress, inverted) {
         if (inverted === void 0) { inverted = false; }
-        var pixelPosition = config_1.tileToPixel(position);
         var assetSize = this.spriteSheet.assetSize;
+        var x = assetSize.x;
+        var y = assetSize.y;
         var sx = assetSize.x * progress;
-        var sy = inverted ? assetSize.y : 0;
-        log_1.log.debug("Rendered tile: {x:" + position.x + ",y:" + position.y + ",p:" + progress + "}");
-        sketch.image(this.spriteSheet.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
+        var sy = inverted && progress < 18 ? assetSize.y : 0;
+        sketch.image(this.spriteSheet.image, 0, 0, x, y, sx, sy, x, y);
     };
-    TileAsset.prototype.drawConnection = function (sketch, position, direction, sourceProgress, targetProgress) {
-        var pixelPosition = config_1.tileToPixel(position);
+    TileAsset.prototype.drawConnection = function (sketch, direction, sourceProgress, targetProgress, delta) {
+        if (delta === void 0) { delta = { x: 0, y: 0 }; }
+        var deltaPosition = config_1.tileToPixel(delta);
         var assetSize = config_1.renderSettings.tileSize;
         var sx = assetSize.x * direction;
         var sy = 0;
@@ -72,8 +73,7 @@ var TileAsset = (function () {
         });
         if (!connection)
             return;
-        log_1.log.debug("Rendered connection: {x:" + position.x + ",y:" + position.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
-        sketch.image(connection.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
+        sketch.image(connection.image, deltaPosition.x, deltaPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }());

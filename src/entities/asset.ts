@@ -55,30 +55,32 @@ export class TileAsset {
         })
     }
 
-    drawTile(sketch: p5, position: Position, progress: number, inverted: boolean = false) {
-        const pixelPosition = tileToPixel(position)
+    drawTile(sketch: p5, progress: number, inverted: boolean = false) {
         const assetSize = this.spriteSheet.assetSize
+        const x = assetSize.x
+        const y = assetSize.y
         const sx = assetSize.x*progress
-        const sy = inverted ? assetSize.y : 0
-        log.debug(`Rendered tile: {x:${position.x},y:${position.y},p:${progress}}`)
-        sketch.image(this.spriteSheet.image,pixelPosition.x,pixelPosition.y,assetSize.x,assetSize.y,sx,sy,assetSize.x,assetSize.y)
+        const sy = inverted && progress < 18 ? assetSize.y : 0
+        sketch.image(this.spriteSheet.image,0,0,x,y,sx,sy,x,y)
     }
 
-    drawConnection(sketch: p5, position: Position, direction: Direction, sourceProgress: number, targetProgress: number) {
-        const pixelPosition = tileToPixel(position)
+    drawConnection(sketch: p5, direction: Direction, sourceProgress: number, targetProgress: number, delta: Position = {x:0,y:0}) {
+        const deltaPosition = tileToPixel(delta)
         const assetSize = renderSettings.tileSize
         const sx = assetSize.x*direction
         const sy = 0
-        let spriteSheet = connectionSpriteSheets.find(spriteSheet => {
+
+        const spriteSheet = connectionSpriteSheets.find(spriteSheet => {
             return sourceProgress >= spriteSheet.range.minimum && sourceProgress <= spriteSheet.range.maximum
         })
         if (!spriteSheet) return
-        let connection = spriteSheet.connections.find(connection => {
+
+        const connection = spriteSheet.connections.find(connection => {
             return targetProgress >= connection.range.minimum && targetProgress <= connection.range.maximum 
         })
         if (!connection) return
-        log.debug(`Rendered connection: {x:${position.x},y:${position.y},d:${direction},sp:${sourceProgress},tp:${targetProgress}}`)
-        sketch.image(connection.image,pixelPosition.x,pixelPosition.y,assetSize.x,assetSize.y,sx,sy,assetSize.x,assetSize.y)
+
+        sketch.image(connection.image,deltaPosition.x,deltaPosition.y,assetSize.x,assetSize.y,sx,sy,assetSize.x,assetSize.y)
     }
 
 }

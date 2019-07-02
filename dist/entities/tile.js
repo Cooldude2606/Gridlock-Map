@@ -3,18 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var asset_1 = require("./asset");
 var config_1 = require("../public/config");
 var defines_1 = require("../lib/defines");
+var log_1 = require("../lib/log");
 var Redirect = (function () {
     function Redirect(position, tile) {
         this.position = position;
         this.tile = tile;
+        this.delta = {
+            x: position.x - tile.position.x,
+            y: position.y - tile.position.y
+        };
     }
-    Redirect.prototype.draw = function (sketch, grid) {
-        var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
-        var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
+    Redirect.prototype.updateTileBuffer = function (grid) {
+        var tile = this.tile;
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this.tile) {
-                this.tile.asset.drawConnection(sketch, { x: px, y: py }, direction, this.tile.progress, targetTile.progress);
+                tile.asset.drawConnection(tile.buffer, direction, tile.progress, targetTile.progress, this.delta);
             }
         }
     };
@@ -31,20 +35,37 @@ var Tile = (function () {
         else if (ran < 0.98)
             this.progress = 8;
         else
-            this.progress = 17;
+            this.progress = 18;
         this.logo = logo;
         this.inverted = false;
         this.redirects = [];
         this.asset = new asset_1.TileAsset(size, logo);
     }
-    Tile.prototype.draw = function (sketch, grid) {
-        this.asset.drawTile(sketch, this.position, this.progress, this.inverted);
+    Tile.prototype.newBuffer = function (sketch, grid) {
+        var size = config_1.tileToPixel(this.size);
+        if (this.buffer)
+            this.buffer.remove();
+        this.buffer = sketch.createGraphics(size.x, size.y);
+        var context = this.buffer.elt.getContext('2d');
+        context.imageSmoothingEnabled = false;
+        log_1.log.debug("Rendered tile: {x:" + this.position.x + ",y:" + this.position.y + ",p:" + this.progress + ",i:" + this.inverted + "}");
+        this.asset.drawTile(this.buffer, this.progress, this.inverted);
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this) {
-                this.asset.drawConnection(sketch, this.position, direction, this.progress, targetTile.progress);
+                log_1.log.debug("Rendered connection: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sp:" + this.progress + ",tp:" + targetTile.progress + "}");
+                this.asset.drawConnection(this.buffer, direction, this.progress, targetTile.progress);
             }
         }
+        this.redirects.forEach(function (redirect) {
+            redirect.updateTileBuffer(grid);
+        });
+    };
+    Tile.prototype.draw = function (sketch, grid) {
+        if (!this.buffer)
+            this.newBuffer(sketch, grid);
+        var positionPixel = config_1.tileToPixel(this.position);
+        grid.buffer.image(this.buffer, positionPixel.x, positionPixel.y);
     };
     return Tile;
 }());

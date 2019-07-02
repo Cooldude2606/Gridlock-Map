@@ -23,6 +23,8 @@ function sketchDefine(sketch: p5) {
             if (file.subtype == 'json') {
                 sketch.loadJSON(file.data,(data: Array<TileImport>) => {
                     grid.load(data)
+                    grid.newTileBuffers(sketch)
+                    grid.newBuffer(sketch)
                     sketch.redraw()
                 })
             }
@@ -36,14 +38,20 @@ function sketchDefine(sketch: p5) {
         if (process.env.NODE_ENV === 'production') {
             sketch.loadJSON('assets/map.json', (data: Array<TileImport>) => {
                 grid.load(data)
+                grid.newTileBuffers(sketch)
+                grid.newBuffer(sketch)
                 sketch.redraw()
             })
+
         } else {
             for (let x = 0; x < 15;x++) {
                 for (let y = 0; y < 15;y++) {
                     grid.newTile({x:x,y:y},{x:1,y:1})
                 }
             }
+
+            grid.calculateProgressAll()
+            grid.newBuffer(sketch)
         }
     }
 
@@ -53,6 +61,7 @@ function sketchDefine(sketch: p5) {
                 newTileSpriteSheet(image,config)
             })
         })
+
         for (let logoName in logoAssets) {
             const file = logoAssets[logoName]
             sketch.loadImage(`assets/${file}`,image => {
@@ -63,6 +72,7 @@ function sketchDefine(sketch: p5) {
                 },logoName)
             })
         }
+
         connectionAssets.forEach(config => {
             const range: Range = {minimum: config.min, maximum: config.max}
             config.connections.forEach(connection => {
@@ -75,13 +85,11 @@ function sketchDefine(sketch: p5) {
     
     sketch.draw = () => {
         sketch.background(0)
-        grid.draw(sketch,center)
+        grid.draw(sketch,center,scale)
     }
 
     sketch.doubleClicked = () => {
-        if (sketch.mouseButton == 'left') {
-            grid.export(sketch)
-        }
+        // possible way to join game?
     }
 
     sketch.mousePressed = () => {
@@ -95,8 +103,11 @@ function sketchDefine(sketch: p5) {
     }
 
     sketch.mouseWheel = (event: any) => {
-        scale -= event.delta/25
-        grid.newBuffer(sketch,scale)
+        const oldScale = scale
+        scale *= 1-(event.delta/20)
+        scale = scale < 0.5 ? 0.5 : Math.floor(scale*100)/100
+        scale = scale > 5 ? 5 : scale 
+        if (scale != oldScale) grid.newBuffer(sketch,scale)
     }
 
     sketch.windowResized = () => {

@@ -95536,19 +95536,22 @@ var TileAsset = function () {
             return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo;
         });
     }
-    TileAsset.prototype.drawTile = function (sketch, position, progress, inverted) {
+    TileAsset.prototype.drawTile = function (sketch, progress, inverted) {
         if (inverted === void 0) {
             inverted = false;
         }
-        var pixelPosition = config_1.tileToPixel(position);
         var assetSize = this.spriteSheet.assetSize;
+        var x = assetSize.x;
+        var y = assetSize.y;
         var sx = assetSize.x * progress;
-        var sy = inverted ? assetSize.y : 0;
-        log_1.log.debug("Rendered tile: {x:" + position.x + ",y:" + position.y + ",p:" + progress + "}");
-        sketch.image(this.spriteSheet.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
+        var sy = inverted && progress < 18 ? assetSize.y : 0;
+        sketch.image(this.spriteSheet.image, 0, 0, x, y, sx, sy, x, y);
     };
-    TileAsset.prototype.drawConnection = function (sketch, position, direction, sourceProgress, targetProgress) {
-        var pixelPosition = config_1.tileToPixel(position);
+    TileAsset.prototype.drawConnection = function (sketch, direction, sourceProgress, targetProgress, delta) {
+        if (delta === void 0) {
+            delta = { x: 0, y: 0 };
+        }
+        var deltaPosition = config_1.tileToPixel(delta);
         var assetSize = config_1.renderSettings.tileSize;
         var sx = assetSize.x * direction;
         var sy = 0;
@@ -95560,8 +95563,7 @@ var TileAsset = function () {
             return targetProgress >= connection.range.minimum && targetProgress <= connection.range.maximum;
         });
         if (!connection) return;
-        log_1.log.debug("Rendered connection: {x:" + position.x + ",y:" + position.y + ",d:" + direction + ",sp:" + sourceProgress + ",tp:" + targetProgress + "}");
-        sketch.image(connection.image, pixelPosition.x, pixelPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
+        sketch.image(connection.image, deltaPosition.x, deltaPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
     return TileAsset;
 }();
@@ -95598,8 +95600,8 @@ var Grid = function () {
         get: function get() {
             var area = this.area;
             return {
-                x: area.bottomRight.x - area.topLeft.x,
-                y: area.bottomRight.y - area.topLeft.y
+                x: area.bottomRight.x - area.topLeft.x + 1,
+                y: area.bottomRight.y - area.topLeft.y + 1
             };
         },
         enumerable: true,
@@ -95694,6 +95696,12 @@ var Grid = function () {
             _loop_1(currentIndex);
         }
     };
+    Grid.prototype.calculateProgressAll = function () {
+        var _this = this;
+        this.tiles.forEach(function (tile) {
+            if (tile instanceof tile_1.Tile && tile.progress > 0) _this.calculateProgress(tile);
+        });
+    };
     Grid.prototype.load = function (data) {
         var _this = this;
         log_1.log.debug('Loading new map data');
@@ -95703,12 +95711,15 @@ var Grid = function () {
             tile.progress = tileData.progress || 0;
             tile.inverted = tileData.inverted || false;
         });
+        this.calculateProgressAll();
     };
-    Grid.prototype.export = function (sketch) {
-        var size = config_1.tileToPixel(this.size);
-        sketch.resizeCanvas(size.x, size.y);
-        sketch.save('gridlock-map.png');
-        sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+    Grid.prototype.newTileBuffers = function (sketch) {
+        var _this = this;
+        this.tiles.forEach(function (tile) {
+            if (tile instanceof tile_1.Tile) {
+                tile.newBuffer(sketch, _this);
+            }
+        });
     };
     Grid.prototype.newBuffer = function (sketch, scale) {
         var _this = this;
@@ -95716,21 +95727,25 @@ var Grid = function () {
             scale = config_1.renderSettings.scale;
         }
         var size = config_1.tileToPixel(this.size);
+        if (this.buffer) this.buffer.remove();
         this.buffer = sketch.createGraphics(size.x * scale, size.y * scale);
+        this.center = { x: size.x * scale / 2, y: size.y * scale / 2 };
         this.buffer.scale(scale);
         var context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
         this.tiles.forEach(function (tile) {
-            if (tile instanceof tile_1.Tile && tile.progress > 0) _this.calculateProgress(tile);
+            if (tile instanceof tile_1.Tile) {
+                tile.draw(sketch, _this);
+            }
         });
-        this.tiles.forEach(function (tile) {
-            tile.draw(_this.buffer, _this);
-        });
+        log_1.log.debug("Rendered grid: {s:" + scale + "}");
     };
-    Grid.prototype.draw = function (sketch, position) {
+    Grid.prototype.draw = function (sketch, position, scale) {
+        if (scale === void 0) {
+            scale = config_1.renderSettings.scale;
+        }
         if (!this.buffer) this.newBuffer(sketch);
-        var size = config_1.tileToPixel(this.size);
-        sketch.image(this.buffer, position.x - size.x, position.y - size.y);
+        sketch.image(this.buffer, position.x - this.center.x, position.y - this.center.y);
     };
     return Grid;
 }();
@@ -95743,18 +95758,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var asset_1 = require("./asset");
 var config_1 = require("../public/config");
 var defines_1 = require("../lib/defines");
+var log_1 = require("../lib/log");
 var Redirect = function () {
     function Redirect(position, tile) {
         this.position = position;
         this.tile = tile;
+        this.delta = {
+            x: position.x - tile.position.x,
+            y: position.y - tile.position.y
+        };
     }
-    Redirect.prototype.draw = function (sketch, grid) {
-        var px = this.position.x * config_1.renderSettings.tileSize.x * config_1.renderSettings.scale;
-        var py = this.position.y * config_1.renderSettings.tileSize.y * config_1.renderSettings.scale;
+    Redirect.prototype.updateTileBuffer = function (grid) {
+        var tile = this.tile;
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this.tile) {
-                this.tile.asset.drawConnection(sketch, { x: px, y: py }, direction, this.tile.progress, targetTile.progress);
+                tile.asset.drawConnection(tile.buffer, direction, tile.progress, targetTile.progress, this.delta);
             }
         }
     };
@@ -95766,26 +95785,41 @@ var Tile = function () {
         this.position = position;
         this.size = size;
         var ran = Math.random();
-        if (ran < 0.95) this.progress = 0;else if (ran < 0.98) this.progress = 8;else this.progress = 17;
+        if (ran < 0.95) this.progress = 0;else if (ran < 0.98) this.progress = 8;else this.progress = 18;
         this.logo = logo;
         this.inverted = false;
         this.redirects = [];
         this.asset = new asset_1.TileAsset(size, logo);
     }
-    Tile.prototype.draw = function (sketch, grid) {
-        this.asset.drawTile(sketch, this.position, this.progress, this.inverted);
+    Tile.prototype.newBuffer = function (sketch, grid) {
+        var size = config_1.tileToPixel(this.size);
+        if (this.buffer) this.buffer.remove();
+        this.buffer = sketch.createGraphics(size.x, size.y);
+        var context = this.buffer.elt.getContext('2d');
+        context.imageSmoothingEnabled = false;
+        log_1.log.debug("Rendered tile: {x:" + this.position.x + ",y:" + this.position.y + ",p:" + this.progress + ",i:" + this.inverted + "}");
+        this.asset.drawTile(this.buffer, this.progress, this.inverted);
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this) {
-                this.asset.drawConnection(sketch, this.position, direction, this.progress, targetTile.progress);
+                log_1.log.debug("Rendered connection: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sp:" + this.progress + ",tp:" + targetTile.progress + "}");
+                this.asset.drawConnection(this.buffer, direction, this.progress, targetTile.progress);
             }
         }
+        this.redirects.forEach(function (redirect) {
+            redirect.updateTileBuffer(grid);
+        });
+    };
+    Tile.prototype.draw = function (sketch, grid) {
+        if (!this.buffer) this.newBuffer(sketch, grid);
+        var positionPixel = config_1.tileToPixel(this.position);
+        grid.buffer.image(this.buffer, positionPixel.x, positionPixel.y);
     };
     return Tile;
 }();
 exports.Tile = Tile;
 
-},{"../lib/defines":20,"../public/config":22,"./asset":17}],20:[function(require,module,exports){
+},{"../lib/defines":20,"../lib/log":21,"../public/config":22,"./asset":17}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -95879,11 +95913,9 @@ var templateObject_1, templateObject_2, templateObject_3;
 }).call(this,require('_process'))
 
 },{"_process":15,"chalk":4,"moment":12}],22:[function(require,module,exports){
-(function (process){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-process.env.NODE_ENV = 'development';
 exports.renderSettings = {
     scale: 2,
     tileSize: {
@@ -95926,14 +95958,12 @@ exports.progressCalculations = [{ min: 0, max: 6, rtn: function rtn(p) {
         return p - 1;
     } }, { min: 8, max: 16, rtn: function rtn(p) {
         return 6;
-    } }, { min: 17, max: 17, rtn: function rtn(p) {
+    } }, { min: 17, max: 18, rtn: function rtn(p) {
         return 7;
     } }];
-exports.connectionAssets = [{ min: 7, max: 7, connections: [{ min: 0, max: 17, file: 'connection000.png' }] }, { min: 8, max: 16, connections: [{ min: 0, max: 16, file: 'connection000.png' }, { min: 17, max: 17, file: 'connection003.png' }] }, { min: 17, max: 17, connections: [{ min: 0, max: 7, file: 'connection000.png' }, { min: 8, max: 16, file: 'connection002.png' }, { min: 17, max: 17, file: 'connection001.png' }] }];
+exports.connectionAssets = [{ min: 7, max: 7, connections: [{ min: 0, max: 18, file: 'connection000.png' }] }, { min: 8, max: 16, connections: [{ min: 0, max: 16, file: 'connection000.png' }, { min: 17, max: 18, file: 'connection003.png' }] }, { min: 17, max: 18, connections: [{ min: 0, max: 7, file: 'connection000.png' }, { min: 8, max: 16, file: 'connection002.png' }, { min: 17, max: 18, file: 'connection001.png' }] }];
 
-}).call(this,require('_process'))
-
-},{"_process":15}],23:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 (function (process){
 "use strict";
 
@@ -95956,6 +95986,8 @@ function sketchDefine(sketch) {
             if (file.subtype == 'json') {
                 sketch.loadJSON(file.data, function (data) {
                     grid.load(data);
+                    grid.newTileBuffers(sketch);
+                    grid.newBuffer(sketch);
                     sketch.redraw();
                 });
             }
@@ -95966,6 +95998,8 @@ function sketchDefine(sketch) {
         if (process.env.NODE_ENV === 'production') {
             sketch.loadJSON('assets/map.json', function (data) {
                 grid.load(data);
+                grid.newTileBuffers(sketch);
+                grid.newBuffer(sketch);
                 sketch.redraw();
             });
         } else {
@@ -95974,6 +96008,8 @@ function sketchDefine(sketch) {
                     grid.newTile({ x: x, y: y }, { x: 1, y: 1 });
                 }
             }
+            grid.calculateProgressAll();
+            grid.newBuffer(sketch);
         }
     };
     sketch.preload = function () {
@@ -96006,13 +96042,9 @@ function sketchDefine(sketch) {
     };
     sketch.draw = function () {
         sketch.background(0);
-        grid.draw(sketch, center);
+        grid.draw(sketch, center, scale);
     };
-    sketch.doubleClicked = function () {
-        if (sketch.mouseButton == 'left') {
-            grid.export(sketch);
-        }
-    };
+    sketch.doubleClicked = function () {};
     sketch.mousePressed = function () {
         offset.x = sketch.mouseX - center.x;
         offset.y = sketch.mouseY - center.y;
@@ -96022,8 +96054,11 @@ function sketchDefine(sketch) {
         center.y = sketch.mouseY - offset.y;
     };
     sketch.mouseWheel = function (event) {
-        scale -= event.delta / 25;
-        grid.newBuffer(sketch, scale);
+        var oldScale = scale;
+        scale *= 1 - event.delta / 20;
+        scale = scale < 0.5 ? 0.5 : Math.floor(scale * 100) / 100;
+        scale = scale > 5 ? 5 : scale;
+        if (scale != oldScale) grid.newBuffer(sketch, scale);
     };
     sketch.windowResized = function () {
         sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);

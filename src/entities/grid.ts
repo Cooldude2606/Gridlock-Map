@@ -8,6 +8,7 @@ export class Grid {
 
     tiles: Array<Tile|Redirect>
     buffer: p5.Graphics|any
+    center: Position
 
     constructor() {
         this.tiles = []
@@ -28,8 +29,8 @@ export class Grid {
     get size(): Size {
         const area = this.area
         return {
-            x: area.bottomRight.x-area.topLeft.x,
-            y: area.bottomRight.y-area.topLeft.y
+            x: area.bottomRight.x-area.topLeft.x+1,
+            y: area.bottomRight.y-area.topLeft.y+1
         }
     }
 
@@ -132,6 +133,12 @@ export class Grid {
 
     }
 
+    calculateProgressAll() {
+        this.tiles.forEach(tile => {
+            if (tile instanceof Tile && tile.progress > 0) this.calculateProgress(tile)
+        })
+    }
+
     load(data: Array<TileImport>): void {
         log.debug('Loading new map data')
         this.tiles = []
@@ -140,38 +147,40 @@ export class Grid {
             tile.progress = tileData.progress || 0
             tile.inverted = tileData.inverted || false
         })
+        this.calculateProgressAll()
     }
 
-    export(sketch: p5): void {
-        const size = tileToPixel(this.size)
-        sketch.resizeCanvas(size.x,size.y)
-        sketch.save('gridlock-map.png')
-        sketch.resizeCanvas(sketch.windowWidth,sketch.windowHeight)
+    newTileBuffers(sketch: p5) {
+        this.tiles.forEach(tile => {
+            if (tile instanceof Tile) {
+                tile.newBuffer(sketch,this)
+            }
+        })
     }
 
     newBuffer(sketch: p5, scale: number = renderSettings.scale): void {
         const size = tileToPixel(this.size)
+        if (this.buffer) this.buffer.remove()
         this.buffer = sketch.createGraphics(size.x*scale,size.y*scale)
+        this.center = {x: size.x*scale/2, y:size.y*scale/2}
         this.buffer.scale(scale)
-
+        
         const context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
-
+        
         this.tiles.forEach(tile => {
-            if (tile instanceof Tile && tile.progress > 0) this.calculateProgress(tile)
+            if (tile instanceof Tile) {
+                tile.draw(sketch,this)
+            }
         })
-
-        this.tiles.forEach(tile => {
-            tile.draw(this.buffer,this)
-        })
-
+        
+        log.debug(`Rendered grid: {s:${scale}}`)
     }
 
-    draw(sketch: p5, position: Position): void {
+    draw(sketch: p5, position: Position, scale: number = renderSettings.scale): void {
         if (!this.buffer) this.newBuffer(sketch)
 
-        const size = tileToPixel(this.size)
-        sketch.image(this.buffer,position.x-size.x,position.y-size.y)
+        sketch.image(this.buffer,position.x-this.center.x,position.y-this.center.y)
     }
 
 }

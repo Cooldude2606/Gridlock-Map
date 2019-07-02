@@ -1,6 +1,6 @@
 import { Dictionary, Size, Position } from "../lib/defines";
 
-process.env.NODE_ENV = 'development'
+//process.env.NODE_ENV = 'development'
 
 export const renderSettings = {
     scale: 2,
@@ -50,20 +50,20 @@ export const progressCalculations = [
     { min: 0, max: 6, rtn: (p:number):number => p-2},
     { min: 7, max: 7, rtn: (p:number):number => p-1},
     { min: 8, max: 16, rtn: (p:number):number => 6},
-    { min: 17, max: 17, rtn: (p:number):number => 7},
+    { min: 17, max: 18, rtn: (p:number):number => 7},
 ]
 
 export const connectionAssets = [
     { min: 7, max: 7, connections: [
-        { min: 0, max: 17, file: 'connection000.png'},
+        { min: 0, max: 18, file: 'connection000.png'},
     ]},
     { min: 8, max: 16, connections: [
         { min: 0, max: 16, file: 'connection000.png'},
-        { min: 17, max: 17, file: 'connection003.png'}
+        { min: 17, max: 18, file: 'connection003.png'}
     ]},
-    { min: 17, max: 17, connections: [
+    { min: 17, max: 18, connections: [
         { min: 0, max: 7, file: 'connection000.png'},
         { min: 8, max: 16, file: 'connection002.png'},
-        { min: 17, max: 17, file: 'connection001.png'}
+        { min: 17, max: 18, file: 'connection001.png'}
     ]}
 ]

@@ -31,8 +31,8 @@ var Grid = (function () {
         get: function () {
             var area = this.area;
             return {
-                x: area.bottomRight.x - area.topLeft.x,
-                y: area.bottomRight.y - area.topLeft.y
+                x: area.bottomRight.x - area.topLeft.x + 1,
+                y: area.bottomRight.y - area.topLeft.y + 1
             };
         },
         enumerable: true,
@@ -126,6 +126,13 @@ var Grid = (function () {
             _loop_1(currentIndex);
         }
     };
+    Grid.prototype.calculateProgressAll = function () {
+        var _this = this;
+        this.tiles.forEach(function (tile) {
+            if (tile instanceof tile_1.Tile && tile.progress > 0)
+                _this.calculateProgress(tile);
+        });
+    };
     Grid.prototype.load = function (data) {
         var _this = this;
         log_1.log.debug('Loading new map data');
@@ -135,34 +142,39 @@ var Grid = (function () {
             tile.progress = tileData.progress || 0;
             tile.inverted = tileData.inverted || false;
         });
+        this.calculateProgressAll();
     };
-    Grid.prototype.export = function (sketch) {
-        var size = config_1.tileToPixel(this.size);
-        sketch.resizeCanvas(size.x, size.y);
-        sketch.save('gridlock-map.png');
-        sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
+    Grid.prototype.newTileBuffers = function (sketch) {
+        var _this = this;
+        this.tiles.forEach(function (tile) {
+            if (tile instanceof tile_1.Tile) {
+                tile.newBuffer(sketch, _this);
+            }
+        });
     };
     Grid.prototype.newBuffer = function (sketch, scale) {
         var _this = this;
         if (scale === void 0) { scale = config_1.renderSettings.scale; }
         var size = config_1.tileToPixel(this.size);
+        if (this.buffer)
+            this.buffer.remove();
         this.buffer = sketch.createGraphics(size.x * scale, size.y * scale);
+        this.center = { x: size.x * scale / 2, y: size.y * scale / 2 };
         this.buffer.scale(scale);
         var context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
         this.tiles.forEach(function (tile) {
-            if (tile instanceof tile_1.Tile && tile.progress > 0)
-                _this.calculateProgress(tile);
+            if (tile instanceof tile_1.Tile) {
+                tile.draw(sketch, _this);
+            }
         });
-        this.tiles.forEach(function (tile) {
-            tile.draw(_this.buffer, _this);
-        });
+        log_1.log.debug("Rendered grid: {s:" + scale + "}");
     };
-    Grid.prototype.draw = function (sketch, position) {
+    Grid.prototype.draw = function (sketch, position, scale) {
+        if (scale === void 0) { scale = config_1.renderSettings.scale; }
         if (!this.buffer)
             this.newBuffer(sketch);
-        var size = config_1.tileToPixel(this.size);
-        sketch.image(this.buffer, position.x - size.x, position.y - size.y);
+        sketch.image(this.buffer, position.x - this.center.x, position.y - this.center.y);
     };
     return Grid;
 }());
