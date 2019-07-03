@@ -152,15 +152,13 @@ var Grid = (function () {
             }
         });
     };
-    Grid.prototype.newBuffer = function (sketch, scale) {
+    Grid.prototype.newBuffer = function (sketch) {
         var _this = this;
-        if (scale === void 0) { scale = config_1.renderSettings.scale; }
         var size = config_1.tileToPixel(this.size);
         if (this.buffer)
             this.buffer.remove();
-        this.buffer = sketch.createGraphics(size.x * scale, size.y * scale);
-        this.center = { x: size.x * scale / 2, y: size.y * scale / 2 };
-        this.buffer.scale(scale);
+        this.buffer = sketch.createGraphics(size.x, size.y);
+        this.center = { x: size.x / 2, y: size.y / 2 };
         var context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
         this.tiles.forEach(function (tile) {
@@ -168,13 +166,12 @@ var Grid = (function () {
                 tile.draw(sketch, _this);
             }
         });
-        log_1.log.debug("Rendered grid: {s:" + scale + "}");
+        log_1.log.debug("Rendered grid: {}");
     };
-    Grid.prototype.draw = function (sketch, position, scale) {
-        if (scale === void 0) { scale = config_1.renderSettings.scale; }
+    Grid.prototype.draw = function (sketch) {
         if (!this.buffer)
             this.newBuffer(sketch);
-        sketch.image(this.buffer, position.x - this.center.x, position.y - this.center.y);
+        sketch.image(this.buffer, -this.center.x, -this.center.y);
     };
     return Grid;
 }());

@@ -95721,16 +95721,12 @@ var Grid = function () {
             }
         });
     };
-    Grid.prototype.newBuffer = function (sketch, scale) {
+    Grid.prototype.newBuffer = function (sketch) {
         var _this = this;
-        if (scale === void 0) {
-            scale = config_1.renderSettings.scale;
-        }
         var size = config_1.tileToPixel(this.size);
         if (this.buffer) this.buffer.remove();
-        this.buffer = sketch.createGraphics(size.x * scale, size.y * scale);
-        this.center = { x: size.x * scale / 2, y: size.y * scale / 2 };
-        this.buffer.scale(scale);
+        this.buffer = sketch.createGraphics(size.x, size.y);
+        this.center = { x: size.x / 2, y: size.y / 2 };
         var context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
         this.tiles.forEach(function (tile) {
@@ -95738,14 +95734,11 @@ var Grid = function () {
                 tile.draw(sketch, _this);
             }
         });
-        log_1.log.debug("Rendered grid: {s:" + scale + "}");
+        log_1.log.debug("Rendered grid: {}");
     };
-    Grid.prototype.draw = function (sketch, position, scale) {
-        if (scale === void 0) {
-            scale = config_1.renderSettings.scale;
-        }
+    Grid.prototype.draw = function (sketch) {
         if (!this.buffer) this.newBuffer(sketch);
-        sketch.image(this.buffer, position.x - this.center.x, position.y - this.center.y);
+        sketch.image(this.buffer, -this.center.x, -this.center.y);
     };
     return Grid;
 }();
@@ -95981,7 +95974,7 @@ function sketchDefine(sketch) {
     var scale = config_1.renderSettings.scale;
     sketch.setup = function () {
         canvas = sketch.createCanvas(sketch.windowWidth, sketch.windowHeight);
-        sketch.frameRate(25);
+        sketch.frameRate(30);
         canvas.drop(function (file) {
             if (file.subtype == 'json') {
                 sketch.loadJSON(file.data, function (data) {
@@ -96042,7 +96035,9 @@ function sketchDefine(sketch) {
     };
     sketch.draw = function () {
         sketch.background(0);
-        grid.draw(sketch, center, scale);
+        sketch.translate(center.x, center.y);
+        sketch.scale(scale);
+        grid.draw(sketch);
     };
     sketch.doubleClicked = function () {};
     sketch.mousePressed = function () {
@@ -96054,11 +96049,16 @@ function sketchDefine(sketch) {
         center.y = sketch.mouseY - offset.y;
     };
     sketch.mouseWheel = function (event) {
+        var centerDelta = event.delta / 20;
+        var scaleDelta = 1 - centerDelta;
         var oldScale = scale;
-        scale *= 1 - event.delta / 20;
+        scale *= scaleDelta;
         scale = scale < 0.5 ? 0.5 : Math.floor(scale * 100) / 100;
         scale = scale > 5 ? 5 : scale;
-        if (scale != oldScale) grid.newBuffer(sketch, scale);
+        if (scale != oldScale) {
+            center.x -= (center.x - sketch.mouseX) * centerDelta;
+            center.y -= (center.y - sketch.mouseY) * centerDelta;
+        }
     };
     sketch.windowResized = function () {
         sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);

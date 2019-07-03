@@ -158,12 +158,11 @@ export class Grid {
         })
     }
 
-    newBuffer(sketch: p5, scale: number = renderSettings.scale): void {
+    newBuffer(sketch: p5): void {
         const size = tileToPixel(this.size)
         if (this.buffer) this.buffer.remove()
-        this.buffer = sketch.createGraphics(size.x*scale,size.y*scale)
-        this.center = {x: size.x*scale/2, y:size.y*scale/2}
-        this.buffer.scale(scale)
+        this.buffer = sketch.createGraphics(size.x,size.y)
+        this.center = {x: size.x/2, y:size.y/2}
         
         const context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;
@@ -174,13 +173,12 @@ export class Grid {
             }
         })
         
-        log.debug(`Rendered grid: {s:${scale}}`)
+        log.debug(`Rendered grid: {}`)
     }
 
-    draw(sketch: p5, position: Position, scale: number = renderSettings.scale): void {
+    draw(sketch: p5): void {
         if (!this.buffer) this.newBuffer(sketch)
-
-        sketch.image(this.buffer,position.x-this.center.x,position.y-this.center.y)
+        sketch.image(this.buffer,-this.center.x,-this.center.y)
     }
 
 }

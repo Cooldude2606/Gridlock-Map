@@ -16,7 +16,7 @@ function sketchDefine(sketch: p5) {
 
     sketch.setup = () => {
         canvas = sketch.createCanvas(sketch.windowWidth, sketch.windowHeight)
-        sketch.frameRate(25)
+        sketch.frameRate(30)
         //sketch.noLoop()
 
         canvas.drop(file => {
@@ -85,7 +85,9 @@ function sketchDefine(sketch: p5) {
     
     sketch.draw = () => {
         sketch.background(0)
-        grid.draw(sketch,center,scale)
+        sketch.translate(center.x,center.y)
+        sketch.scale(scale)
+        grid.draw(sketch)
     }
 
     sketch.doubleClicked = () => {
@@ -103,11 +105,16 @@ function sketchDefine(sketch: p5) {
     }
 
     sketch.mouseWheel = (event: any) => {
+        const centerDelta = event.delta/20
+        const scaleDelta = 1-centerDelta
         const oldScale = scale
-        scale *= 1-(event.delta/20)
+        scale *= scaleDelta
         scale = scale < 0.5 ? 0.5 : Math.floor(scale*100)/100
-        scale = scale > 5 ? 5 : scale 
-        if (scale != oldScale) grid.newBuffer(sketch,scale)
+        scale = scale > 5 ? 5 : scale
+        if (scale  != oldScale) {
+            center.x -= (center.x - sketch.mouseX)*centerDelta
+            center.y -= (center.y - sketch.mouseY)*centerDelta
+        }
     }
 
     sketch.windowResized = () => {
