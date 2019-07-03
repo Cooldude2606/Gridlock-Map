@@ -1,14 +1,18 @@
 import p5 = require("p5");
 import "p5/lib/addons/p5.dom"
 import { Range, TileImport, Position } from "../lib/defines";
-import { tileAssets, connectionAssets, logoAssets, renderSettings } from "./config";
+import { tileAssets, connectionAssets, logoAssets, renderSettings, pixelToTile, tileToPixel } from "./config";
 import { newTileSpriteSheet, newConnectionSpriteSheet } from "../entities/asset";
 import { Grid } from "../entities/grid";
+import { Tile } from "../entities/tile";
 
 function sketchDefine(sketch: p5) {
 
     const grid = new Grid()
 
+    let selected: Tile
+    let font: p5.Font
+    let cursor: p5.Image
     let canvas: p5.Renderer
     let center: Position
     let offset: Position = {x: 0, y:0}
@@ -18,6 +22,10 @@ function sketchDefine(sketch: p5) {
         canvas = sketch.createCanvas(sketch.windowWidth, sketch.windowHeight)
         sketch.frameRate(30)
         //sketch.noLoop()
+
+        sketch.textFont(font)
+        sketch.textSize(renderSettings.textSize)
+        sketch.textAlign(sketch.LEFT, sketch.TOP)
 
         canvas.drop(file => {
             if (file.subtype == 'json') {
@@ -81,6 +89,9 @@ function sketchDefine(sketch: p5) {
                 })
             })
         })
+
+        cursor = sketch.loadImage('assets/cursor-boxes.png')
+        font = sketch.loadFont('assets/DejaVuSans.ttf')
     }
     
     sketch.draw = () => {
@@ -88,6 +99,22 @@ function sketchDefine(sketch: p5) {
         sketch.translate(center.x,center.y)
         sketch.scale(scale)
         grid.draw(sketch)
+        if (selected && selected.progress >= renderSettings.allowSelectionAtProgress) {
+            const rawTilePosition = selected.position
+            const tilePosition = tileToPixel(rawTilePosition)
+            const rawTileSize = selected.size
+            const tileSize = tileToPixel(rawTileSize)
+            const px = tilePosition.x-grid.center.x
+            const py = tilePosition.y-grid.center.y
+            sketch.image(cursor,px-(4.5*rawTileSize.x),py-(4.5*rawTileSize.y),tileSize.x+(9*rawTileSize.x),tileSize.y+(9*rawTileSize.y),0,0,64,64)
+            const str = `X: ${rawTilePosition.x} Y: ${rawTilePosition.y}`
+            sketch.fill('#313031')
+            sketch.stroke('#261f1c')
+            sketch.rect(px+5,py+5,sketch.textWidth(str)+4,renderSettings.textSize+4)
+            sketch.fill('#e4aa5f')
+            sketch.noStroke()
+            sketch.text(str,px+7,py+7)
+        }
     }
 
     sketch.doubleClicked = () => {
@@ -112,9 +139,19 @@ function sketchDefine(sketch: p5) {
         scale = scale < 0.5 ? 0.5 : Math.floor(scale*100)/100
         scale = scale > 5 ? 5 : scale
         if (scale  != oldScale) {
-            center.x -= (center.x - sketch.mouseX)*centerDelta
-            center.y -= (center.y - sketch.mouseY)*centerDelta
+            center.x -= Math.floor((center.x - sketch.mouseX)*centerDelta)
+            center.y -= Math.floor((center.y - sketch.mouseY)*centerDelta)
         }
+    }
+
+    sketch.mouseMoved = () => {
+        const mouseX = sketch.mouseX-center.x+(grid.center.x*scale)
+        const mouseY = sketch.mouseY-center.y+(grid.center.y*scale)
+        const tilePosition = pixelToTile({
+            x: mouseX/scale,
+            y:  mouseY/scale
+        })
+        selected = grid.getTile(tilePosition)
     }
 
     sketch.windowResized = () => {

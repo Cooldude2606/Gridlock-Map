@@ -3,6 +3,8 @@ import { Dictionary, Size, Position } from "../lib/defines";
 //process.env.NODE_ENV = 'development'
 
 export const renderSettings = {
+    textSize: 12,
+    allowSelectionAtProgress: 8,
     scale: 2,
     tileSize: {
         x: 26,
@@ -17,10 +19,10 @@ export function tileToPixel(data: Size|Position): Size|Position {
     }
 }
 
-export function PixelToTile(data: Size|Position): Size|Position {
+export function pixelToTile(data: Size|Position): Size|Position {
     return {
-        x: data.x/(renderSettings.tileSize.x),
-        y: data.y/(renderSettings.tileSize.y)
+        x: Math.floor(data.x/(renderSettings.tileSize.x)),
+        y: Math.floor(data.y/(renderSettings.tileSize.y))
     }
 }
 
@@ -49,7 +51,7 @@ export const logoAssets: Dictionary = {
 export const progressCalculations = [
     { min: 0, max: 6, rtn: (p:number):number => p-2},
     { min: 7, max: 7, rtn: (p:number):number => p-1},
-    { min: 8, max: 16, rtn: (p:number):number => 6},
+    { min: 8, max: 16, rtn: (p:number):number => 5},
     { min: 17, max: 18, rtn: (p:number):number => 7},
 ]
 

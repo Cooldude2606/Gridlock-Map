@@ -154,8 +154,7 @@
 	},
 	{
 		"position": { "x":10, "y":8 },
-		"size": { "x":1, "y":2 },
-		"progress": 8
+		"size": { "x":1, "y":2 }
 	},
 	{
 		"position": { "x":2, "y":9 },
@@ -164,8 +163,7 @@
 	},
 	{
 		"position": { "x":7, "y":9 },
-		"size": { "x":1, "y":1 },
-		"progress": 8
+		"size": { "x":1, "y":1 }
 	},
 	{
 		"position": { "x":7, "y":10 },

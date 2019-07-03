@@ -162,7 +162,7 @@ export class Grid {
         const size = tileToPixel(this.size)
         if (this.buffer) this.buffer.remove()
         this.buffer = sketch.createGraphics(size.x,size.y)
-        this.center = {x: size.x/2, y:size.y/2}
+        this.center = {x: size.x/2, y: size.y/2}
         
         const context = this.buffer.elt.getContext('2d');
         context.imageSmoothingEnabled = false;

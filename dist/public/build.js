@@ -95910,6 +95910,8 @@ var templateObject_1, templateObject_2, templateObject_3;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renderSettings = {
+    textSize: 12,
+    allowSelectionAtProgress: 8,
     scale: 2,
     tileSize: {
         x: 26,
@@ -95923,13 +95925,13 @@ function tileToPixel(data) {
     };
 }
 exports.tileToPixel = tileToPixel;
-function PixelToTile(data) {
+function pixelToTile(data) {
     return {
-        x: data.x / exports.renderSettings.tileSize.x,
-        y: data.y / exports.renderSettings.tileSize.y
+        x: Math.floor(data.x / exports.renderSettings.tileSize.x),
+        y: Math.floor(data.y / exports.renderSettings.tileSize.y)
     };
 }
-exports.PixelToTile = PixelToTile;
+exports.pixelToTile = pixelToTile;
 exports.tileAssets = [{ x: 1, y: 1, file: 'tile000.png' }, { x: 2, y: 1, file: 'tile001.png' }, { x: 1, y: 2, file: 'tile002.png' }, { x: 2, y: 2, file: 'tile003.png' }];
 exports.logoAssets = {
     redmew: 'logo000.png',
@@ -95950,7 +95952,7 @@ exports.progressCalculations = [{ min: 0, max: 6, rtn: function rtn(p) {
     } }, { min: 7, max: 7, rtn: function rtn(p) {
         return p - 1;
     } }, { min: 8, max: 16, rtn: function rtn(p) {
-        return 6;
+        return 5;
     } }, { min: 17, max: 18, rtn: function rtn(p) {
         return 7;
     } }];
@@ -95968,6 +95970,9 @@ var asset_1 = require("../entities/asset");
 var grid_1 = require("../entities/grid");
 function sketchDefine(sketch) {
     var grid = new grid_1.Grid();
+    var selected;
+    var font;
+    var cursor;
     var canvas;
     var center;
     var offset = { x: 0, y: 0 };
@@ -95975,6 +95980,9 @@ function sketchDefine(sketch) {
     sketch.setup = function () {
         canvas = sketch.createCanvas(sketch.windowWidth, sketch.windowHeight);
         sketch.frameRate(30);
+        sketch.textFont(font);
+        sketch.textSize(config_1.renderSettings.textSize);
+        sketch.textAlign(sketch.LEFT, sketch.TOP);
         canvas.drop(function (file) {
             if (file.subtype == 'json') {
                 sketch.loadJSON(file.data, function (data) {
@@ -96032,12 +96040,30 @@ function sketchDefine(sketch) {
                 });
             });
         });
+        cursor = sketch.loadImage('assets/cursor-boxes.png');
+        font = sketch.loadFont('assets/DejaVuSans.ttf');
     };
     sketch.draw = function () {
         sketch.background(0);
         sketch.translate(center.x, center.y);
         sketch.scale(scale);
         grid.draw(sketch);
+        if (selected && selected.progress >= config_1.renderSettings.allowSelectionAtProgress) {
+            var rawTilePosition = selected.position;
+            var tilePosition = config_1.tileToPixel(rawTilePosition);
+            var rawTileSize = selected.size;
+            var tileSize = config_1.tileToPixel(rawTileSize);
+            var px = tilePosition.x - grid.center.x;
+            var py = tilePosition.y - grid.center.y;
+            sketch.image(cursor, px - 4.5 * rawTileSize.x, py - 4.5 * rawTileSize.y, tileSize.x + 9 * rawTileSize.x, tileSize.y + 9 * rawTileSize.y, 0, 0, 64, 64);
+            var str = "X: " + rawTilePosition.x + " Y: " + rawTilePosition.y;
+            sketch.fill('#313031');
+            sketch.stroke('#261f1c');
+            sketch.rect(px + 5, py + 5, sketch.textWidth(str) + 4, config_1.renderSettings.textSize + 4);
+            sketch.fill('#e4aa5f');
+            sketch.noStroke();
+            sketch.text(str, px + 7, py + 7);
+        }
     };
     sketch.doubleClicked = function () {};
     sketch.mousePressed = function () {
@@ -96056,9 +96082,18 @@ function sketchDefine(sketch) {
         scale = scale < 0.5 ? 0.5 : Math.floor(scale * 100) / 100;
         scale = scale > 5 ? 5 : scale;
         if (scale != oldScale) {
-            center.x -= (center.x - sketch.mouseX) * centerDelta;
-            center.y -= (center.y - sketch.mouseY) * centerDelta;
+            center.x -= Math.floor((center.x - sketch.mouseX) * centerDelta);
+            center.y -= Math.floor((center.y - sketch.mouseY) * centerDelta);
         }
+    };
+    sketch.mouseMoved = function () {
+        var mouseX = sketch.mouseX - center.x + grid.center.x * scale;
+        var mouseY = sketch.mouseY - center.y + grid.center.y * scale;
+        var tilePosition = config_1.pixelToTile({
+            x: mouseX / scale,
+            y: mouseY / scale
+        });
+        selected = grid.getTile(tilePosition);
     };
     sketch.windowResized = function () {
         sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);
