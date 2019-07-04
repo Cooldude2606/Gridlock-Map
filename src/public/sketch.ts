@@ -14,7 +14,7 @@ function sketchDefine(sketch: p5) {
     let font: p5.Font
     let cursor: p5.Image
     let canvas: p5.Renderer
-    let center: Position
+    let center: Position = {x: 0, y:0}
     let offset: Position = {x: 0, y:0}
     let scale: number = renderSettings.scale
 
@@ -99,10 +99,19 @@ function sketchDefine(sketch: p5) {
     }
     
     sketch.draw = () => {
+        const moveSpeedX = Math.floor(renderSettings.tileSize.x/2)
+        const moveSpeedY = Math.floor(renderSettings.tileSize.y/2)
+
+        if (sketch.keyIsDown(87) || sketch.keyIsDown(38)) center.y += moveSpeedY
+        if (sketch.keyIsDown(68) || sketch.keyIsDown(39)) center.x -= moveSpeedX
+        if (sketch.keyIsDown(83) || sketch.keyIsDown(40)) center.y -= moveSpeedY
+        if (sketch.keyIsDown(65) || sketch.keyIsDown(37)) center.x += moveSpeedX
+
         sketch.background(0)
         sketch.translate(center.x,center.y)
         sketch.scale(scale)
         grid.draw(sketch)
+
         if (selected && selected.progress >= renderSettings.allowSelectionAtProgress) {
             const rawTilePosition = selected.position
             const tilePosition = tileToPixel(rawTilePosition)
@@ -137,16 +146,16 @@ function sketchDefine(sketch: p5) {
     }
 
     sketch.mouseWheel = (event: any) => {
-        const centerDelta = event.delta/20
+        const delta = event.delta <= -18 ? -18 : event.delta >= 18 ? 18 : event.delta 
+        const centerDelta = delta/20
         const scaleDelta = 1-centerDelta
-        const oldScale = scale
+        //const oldScale = scale
         scale *= scaleDelta
-        scale = scale < 0.5 ? 0.5 : Math.floor(scale*100)/100
-        scale = scale > 5 ? 5 : scale
-        if (scale  != oldScale) {
+        scale = scale <= 0.5 ? 0.5 : scale >= 5 ? 5 : Math.floor(scale*100)/100 
+        /*if (scale  != oldScale) {
             center.x -= Math.floor((center.x - sketch.mouseX)*centerDelta)
             center.y -= Math.floor((center.y - sketch.mouseY)*centerDelta)
-        }
+        }*/
         return false
     }
 

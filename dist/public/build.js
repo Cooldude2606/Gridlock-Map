@@ -96027,7 +96027,7 @@ function sketchDefine(sketch) {
     var font;
     var cursor;
     var canvas;
-    var center;
+    var center = { x: 0, y: 0 };
     var offset = { x: 0, y: 0 };
     var scale = config_1.renderSettings.scale;
     sketch.setup = function () {
@@ -96099,6 +96099,12 @@ function sketchDefine(sketch) {
         font = sketch.loadFont('assets/DejaVuSans.ttf');
     };
     sketch.draw = function () {
+        var moveSpeedX = Math.floor(config_1.renderSettings.tileSize.x / 2);
+        var moveSpeedY = Math.floor(config_1.renderSettings.tileSize.y / 2);
+        if (sketch.keyIsDown(87) || sketch.keyIsDown(38)) center.y += moveSpeedY;
+        if (sketch.keyIsDown(68) || sketch.keyIsDown(39)) center.x -= moveSpeedX;
+        if (sketch.keyIsDown(83) || sketch.keyIsDown(40)) center.y -= moveSpeedY;
+        if (sketch.keyIsDown(65) || sketch.keyIsDown(37)) center.x += moveSpeedX;
         sketch.background(0);
         sketch.translate(center.x, center.y);
         sketch.scale(scale);
@@ -96131,16 +96137,11 @@ function sketchDefine(sketch) {
         return false;
     };
     sketch.mouseWheel = function (event) {
-        var centerDelta = event.delta / 20;
+        var delta = event.delta <= -18 ? -18 : event.delta >= 18 ? 18 : event.delta;
+        var centerDelta = delta / 20;
         var scaleDelta = 1 - centerDelta;
-        var oldScale = scale;
         scale *= scaleDelta;
-        scale = scale < 0.5 ? 0.5 : Math.floor(scale * 100) / 100;
-        scale = scale > 5 ? 5 : scale;
-        if (scale != oldScale) {
-            center.x -= Math.floor((center.x - sketch.mouseX) * centerDelta);
-            center.y -= Math.floor((center.y - sketch.mouseY) * centerDelta);
-        }
+        scale = scale <= 0.5 ? 0.5 : scale >= 5 ? 5 : Math.floor(scale * 100) / 100;
         return false;
     };
     sketch.mouseMoved = function () {
