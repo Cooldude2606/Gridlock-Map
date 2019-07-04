@@ -96123,10 +96123,12 @@ function sketchDefine(sketch) {
     sketch.mousePressed = function () {
         offset.x = sketch.mouseX - center.x;
         offset.y = sketch.mouseY - center.y;
+        return sketch.mouseButton == sketch.RIGHT;
     };
     sketch.mouseDragged = function () {
         center.x = sketch.mouseX - offset.x;
         center.y = sketch.mouseY - offset.y;
+        return false;
     };
     sketch.mouseWheel = function (event) {
         var centerDelta = event.delta / 20;
@@ -96139,6 +96141,7 @@ function sketchDefine(sketch) {
             center.x -= Math.floor((center.x - sketch.mouseX) * centerDelta);
             center.y -= Math.floor((center.y - sketch.mouseY) * centerDelta);
         }
+        return false;
     };
     sketch.mouseMoved = function () {
         var mouseX = sketch.mouseX - center.x + grid.center.x * scale;
@@ -96148,6 +96151,7 @@ function sketchDefine(sketch) {
             y: mouseY / scale
         });
         selected = grid.getTile(tilePosition);
+        return false;
     };
     sketch.windowResized = function () {
         sketch.resizeCanvas(sketch.windowWidth, sketch.windowHeight);

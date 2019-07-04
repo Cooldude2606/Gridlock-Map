@@ -127,11 +127,13 @@ function sketchDefine(sketch: p5) {
     sketch.mousePressed = () => {
         offset.x = sketch.mouseX - center.x
         offset.y = sketch.mouseY - center.y
+        return sketch.mouseButton == sketch.RIGHT
     }
 
     sketch.mouseDragged = () => {
         center.x = sketch.mouseX - offset.x
         center.y = sketch.mouseY - offset.y
+        return false
     }
 
     sketch.mouseWheel = (event: any) => {
@@ -145,6 +147,7 @@ function sketchDefine(sketch: p5) {
             center.x -= Math.floor((center.x - sketch.mouseX)*centerDelta)
             center.y -= Math.floor((center.y - sketch.mouseY)*centerDelta)
         }
+        return false
     }
 
     sketch.mouseMoved = () => {
@@ -155,6 +158,7 @@ function sketchDefine(sketch: p5) {
             y:  mouseY/scale
         })
         selected = grid.getTile(tilePosition)
+        return false
     }
 
     sketch.windowResized = () => {
