@@ -95488,6 +95488,7 @@ module.exports = {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var defines_1 = require("../lib/defines");
 var config_1 = require("../public/config");
 var log_1 = require("../lib/log");
 var tileSpriteSheets = [];
@@ -95565,11 +95566,41 @@ var TileAsset = function () {
         if (!connection) return;
         sketch.image(connection.image, deltaPosition.x, deltaPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
     };
+    TileAsset.prototype.drawAreaBound = function (sketch, direction, sourceArea, delta) {
+        if (delta === void 0) {
+            delta = { x: 0, y: 0 };
+        }
+        var deltaPosition = config_1.tileToPixel(delta);
+        var assetSize = config_1.renderSettings.tileSize;
+        var minX = deltaPosition.x;
+        var minY = deltaPosition.y;
+        var maxX = assetSize.x + deltaPosition.x;
+        var maxY = assetSize.y + deltaPosition.y;
+        sketch.stroke(sourceArea);
+        switch (direction) {
+            case defines_1.Direction.up:
+                sketch.line(minX + 3, minY, minX + 9, minY);
+                sketch.line(maxX - 9, minY, maxX - 3, minY);
+                break;
+            case defines_1.Direction.right:
+                sketch.line(maxX, minY + 3, maxX, minY + 9);
+                sketch.line(maxX, maxY - 9, maxX, maxY - 3);
+                break;
+            case defines_1.Direction.down:
+                sketch.line(minX + 3, maxY, minX + 9, maxY);
+                sketch.line(maxX - 9, maxY, maxX - 3, maxY);
+                break;
+            case defines_1.Direction.left:
+                sketch.line(minX, minY + 3, minX, minY + 9);
+                sketch.line(minX, maxY - 9, minX, maxY - 3);
+                break;
+        }
+    };
     return TileAsset;
 }();
 exports.TileAsset = TileAsset;
 
-},{"../lib/log":21,"../public/config":22}],18:[function(require,module,exports){
+},{"../lib/defines":20,"../lib/log":21,"../public/config":22}],18:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -95710,6 +95741,8 @@ var Grid = function () {
             var tile = _this.newTile(tileData.position, tileData.size, tileData.logo);
             tile.progress = tileData.progress || 0;
             tile.inverted = tileData.inverted || false;
+            tile.name = tileData.name;
+            tile.area = tileData.area;
         });
         this.calculateProgressAll();
     };
@@ -95763,10 +95796,19 @@ var Redirect = function () {
     }
     Redirect.prototype.updateTileBuffer = function (grid) {
         var tile = this.tile;
+        var renderRequirement = config_1.renderSettings.allowSelectionAtProgress;
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this.tile) {
+                if (tile.area && tile.area != targetTile.area && tile.progress >= renderRequirement) {
+                    log_1.log.debug("Rendered area bound: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sa:" + tile.area + ",ta:" + targetTile.area + "}");
+                    tile.asset.drawAreaBound(tile.buffer, direction, tile.area, this.delta);
+                }
+                log_1.log.debug("Rendered connection: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sp:" + tile.progress + ",tp:" + targetTile.progress + "}");
                 tile.asset.drawConnection(tile.buffer, direction, tile.progress, targetTile.progress, this.delta);
+            } else if (!targetTile && tile.area && tile.progress >= renderRequirement) {
+                log_1.log.debug("Rendered area bound: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sa:" + tile.area + ",ta:Null}");
+                tile.asset.drawAreaBound(tile.buffer, direction, tile.area, this.delta);
             }
         }
     };
@@ -95777,12 +95819,12 @@ var Tile = function () {
     function Tile(position, size, logo) {
         this.position = position;
         this.size = size;
-        var ran = Math.random();
-        if (ran < 0.95) this.progress = 0;else if (ran < 0.98) this.progress = 8;else this.progress = 18;
-        this.logo = logo;
-        this.inverted = false;
-        this.redirects = [];
         this.asset = new asset_1.TileAsset(size, logo);
+        this.redirects = [];
+        this.progress = 0;
+        this.inverted = false;
+        this.logo = logo;
+        this.name = "X: " + position.x + " Y: " + position.y;
     }
     Tile.prototype.newBuffer = function (sketch, grid) {
         var size = config_1.tileToPixel(this.size);
@@ -95792,11 +95834,19 @@ var Tile = function () {
         context.imageSmoothingEnabled = false;
         log_1.log.debug("Rendered tile: {x:" + this.position.x + ",y:" + this.position.y + ",p:" + this.progress + ",i:" + this.inverted + "}");
         this.asset.drawTile(this.buffer, this.progress, this.inverted);
+        var renderRequirement = config_1.renderSettings.allowSelectionAtProgress;
         for (var direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             var targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this) {
+                if (this.area && this.area != targetTile.area && this.progress >= renderRequirement) {
+                    log_1.log.debug("Rendered area bound: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sa:" + this.area + ",ta:" + targetTile.area + "}");
+                    this.asset.drawAreaBound(this.buffer, direction, this.area);
+                }
                 log_1.log.debug("Rendered connection: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sp:" + this.progress + ",tp:" + targetTile.progress + "}");
                 this.asset.drawConnection(this.buffer, direction, this.progress, targetTile.progress);
+            } else if (!targetTile && this.area && this.progress >= renderRequirement) {
+                log_1.log.debug("Rendered area bound: {x:" + this.position.x + ",y:" + this.position.y + ",d:" + defines_1.Direction[direction] + ",sa:" + this.area + ",ta:Null}");
+                this.asset.drawAreaBound(this.buffer, direction, this.area);
             }
         }
         this.redirects.forEach(function (redirect) {
@@ -95911,6 +95961,9 @@ var templateObject_1, templateObject_2, templateObject_3;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renderSettings = {
     textSize: 12,
+    textColour: '#e4aa5f',
+    textBackground: '#313031',
+    textBackgroundOutline: '#261f1c',
     allowSelectionAtProgress: 8,
     scale: 2,
     tileSize: {
@@ -96006,7 +96059,9 @@ function sketchDefine(sketch) {
         } else {
             for (var x = 0; x < 15; x++) {
                 for (var y = 0; y < 15; y++) {
-                    grid.newTile({ x: x, y: y }, { x: 1, y: 1 });
+                    var tile = grid.newTile({ x: x, y: y }, { x: 1, y: 1 });
+                    var ran = Math.random();
+                    if (ran < 0.95) tile.progress = 0;else if (ran < 0.98) tile.progress = 8;else tile.progress = 18;
                 }
             }
             grid.calculateProgressAll();
@@ -96056,13 +96111,12 @@ function sketchDefine(sketch) {
             var px = tilePosition.x - grid.center.x;
             var py = tilePosition.y - grid.center.y;
             sketch.image(cursor, px - 4.5 * rawTileSize.x, py - 4.5 * rawTileSize.y, tileSize.x + 9 * rawTileSize.x, tileSize.y + 9 * rawTileSize.y, 0, 0, 64, 64);
-            var str = "X: " + rawTilePosition.x + " Y: " + rawTilePosition.y;
-            sketch.fill('#313031');
-            sketch.stroke('#261f1c');
-            sketch.rect(px + 5, py + 5, sketch.textWidth(str) + 4, config_1.renderSettings.textSize + 4);
-            sketch.fill('#e4aa5f');
+            sketch.fill(config_1.renderSettings.textBackground);
+            sketch.stroke(config_1.renderSettings.textBackgroundOutline);
+            sketch.rect(px + 5, py + 5, sketch.textWidth(selected.name) + 4, config_1.renderSettings.textSize + 4);
+            sketch.fill(config_1.renderSettings.textColour);
             sketch.noStroke();
-            sketch.text(str, px + 7, py + 7);
+            sketch.text(selected.name, px + 7, py + 7);
         }
     };
     sketch.doubleClicked = function () {};

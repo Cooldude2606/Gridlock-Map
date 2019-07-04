@@ -54,7 +54,11 @@ function sketchDefine(sketch: p5) {
         } else {
             for (let x = 0; x < 15;x++) {
                 for (let y = 0; y < 15;y++) {
-                    grid.newTile({x:x,y:y},{x:1,y:1})
+                    const tile = grid.newTile({x:x,y:y},{x:1,y:1})
+                    const ran = Math.random()
+                    if (ran < 0.95) tile.progress = 0; else
+                    if (ran < 0.98) tile.progress = 8
+                    else tile.progress = 18
                 }
             }
 
@@ -107,13 +111,12 @@ function sketchDefine(sketch: p5) {
             const px = tilePosition.x-grid.center.x
             const py = tilePosition.y-grid.center.y
             sketch.image(cursor,px-(4.5*rawTileSize.x),py-(4.5*rawTileSize.y),tileSize.x+(9*rawTileSize.x),tileSize.y+(9*rawTileSize.y),0,0,64,64)
-            const str = `X: ${rawTilePosition.x} Y: ${rawTilePosition.y}`
-            sketch.fill('#313031')
-            sketch.stroke('#261f1c')
-            sketch.rect(px+5,py+5,sketch.textWidth(str)+4,renderSettings.textSize+4)
-            sketch.fill('#e4aa5f')
+            sketch.fill(renderSettings.textBackground)
+            sketch.stroke(renderSettings.textBackgroundOutline)
+            sketch.rect(px+5,py+5,sketch.textWidth(selected.name)+4,renderSettings.textSize+4)
+            sketch.fill(renderSettings.textColour)
             sketch.noStroke()
-            sketch.text(str,px+7,py+7)
+            sketch.text(selected.name,px+7,py+7)
         }
     }
 

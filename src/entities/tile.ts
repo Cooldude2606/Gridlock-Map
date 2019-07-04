@@ -22,11 +22,20 @@ export class Redirect {
 
     updateTileBuffer(grid: Grid) {
         const tile = this.tile
+        const renderRequirement = renderSettings.allowSelectionAtProgress
 
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
             if (targetTile && targetTile !== this.tile) {
+                if (tile.area && tile.area != targetTile.area && tile.progress >= renderRequirement) {
+                    log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sa:${tile.area},ta:${targetTile.area}}`)
+                    tile.asset.drawAreaBound(tile.buffer,direction,tile.area,this.delta)
+                }
+                log.debug(`Rendered connection: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sp:${tile.progress},tp:${targetTile.progress}}`)
                 tile.asset.drawConnection(tile.buffer,direction,tile.progress,targetTile.progress,this.delta)
+            } else if (!targetTile && tile.area && tile.progress >= renderRequirement) {
+                log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sa:${tile.area},ta:Null}`)
+                tile.asset.drawAreaBound(tile.buffer,direction,tile.area,this.delta)
             }
         }
     }
@@ -41,20 +50,20 @@ export class Tile {
     redirects: Array<Redirect>
     buffer: p5.Graphics|any
     progress: number
-    logo: string
     inverted: boolean
+    logo: string
+    name: string
+    area: string
 
     constructor(position: Position, size: Size, logo?: string) {
         this.position = position
         this.size = size
-        const ran = Math.random()
-        if (ran < 0.95) this.progress = 0; else
-        if (ran < 0.98) this.progress = 8
-        else this.progress = 18
-        this.logo = logo
-        this.inverted = false
-        this.redirects = []
         this.asset = new TileAsset(size,logo)
+        this.redirects = []
+        this.progress = 0
+        this.inverted = false
+        this.logo = logo
+        this.name = `X: ${position.x} Y: ${position.y}`
     }
 
     newBuffer(sketch: p5, grid: Grid ) {
@@ -68,12 +77,22 @@ export class Tile {
         log.debug(`Rendered tile: {x:${this.position.x},y:${this.position.y},p:${this.progress},i:${this.inverted}}`)
         this.asset.drawTile(this.buffer,this.progress,this.inverted)
 
+        const renderRequirement = renderSettings.allowSelectionAtProgress
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
+
             if (targetTile && targetTile !== this) {
+                if (this.area && this.area != targetTile.area && this.progress >= renderRequirement) {
+                    log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sa:${this.area},ta:${targetTile.area}}`)
+                    this.asset.drawAreaBound(this.buffer,direction,this.area)
+                }
                 log.debug(`Rendered connection: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sp:${this.progress},tp:${targetTile.progress}}`)
                 this.asset.drawConnection(this.buffer,direction,this.progress,targetTile.progress)
+            } else if (!targetTile && this.area && this.progress >= renderRequirement) {
+                log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sa:${this.area},ta:Null}`)
+                this.asset.drawAreaBound(this.buffer,direction,this.area)
             }
+
         }
 
         this.redirects.forEach(redirect => {

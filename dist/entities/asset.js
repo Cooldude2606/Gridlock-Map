@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var defines_1 = require("../lib/defines");
 var config_1 = require("../public/config");
 var log_1 = require("../lib/log");
 var tileSpriteSheets = [];
@@ -74,6 +75,34 @@ var TileAsset = (function () {
         if (!connection)
             return;
         sketch.image(connection.image, deltaPosition.x, deltaPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
+    };
+    TileAsset.prototype.drawAreaBound = function (sketch, direction, sourceArea, delta) {
+        if (delta === void 0) { delta = { x: 0, y: 0 }; }
+        var deltaPosition = config_1.tileToPixel(delta);
+        var assetSize = config_1.renderSettings.tileSize;
+        var minX = deltaPosition.x;
+        var minY = deltaPosition.y;
+        var maxX = assetSize.x + deltaPosition.x;
+        var maxY = assetSize.y + deltaPosition.y;
+        sketch.stroke(sourceArea);
+        switch (direction) {
+            case defines_1.Direction.up:
+                sketch.line(minX + 3, minY, minX + 9, minY);
+                sketch.line(maxX - 9, minY, maxX - 3, minY);
+                break;
+            case defines_1.Direction.right:
+                sketch.line(maxX, minY + 3, maxX, minY + 9);
+                sketch.line(maxX, maxY - 9, maxX, maxY - 3);
+                break;
+            case defines_1.Direction.down:
+                sketch.line(minX + 3, maxY, minX + 9, maxY);
+                sketch.line(maxX - 9, maxY, maxX - 3, maxY);
+                break;
+            case defines_1.Direction.left:
+                sketch.line(minX, minY + 3, minX, minY + 9);
+                sketch.line(minX, maxY - 9, minX, maxY - 3);
+                break;
+        }
     };
     return TileAsset;
 }());

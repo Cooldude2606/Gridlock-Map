@@ -4,6 +4,9 @@ import { Dictionary, Size, Position } from "../lib/defines";
 
 export const renderSettings = {
     textSize: 12,
+    textColour: '#e4aa5f',
+    textBackground: '#313031',
+    textBackgroundOutline: '#261f1c',
     allowSelectionAtProgress: 8,
     scale: 2,
     tileSize: {

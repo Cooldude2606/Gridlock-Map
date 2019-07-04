@@ -59,4 +59,6 @@ export interface TileImport {
     progress?: number
     inverted?: boolean
     logo?: string
+    name?: string
+    area?: string
 }

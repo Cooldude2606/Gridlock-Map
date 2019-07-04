@@ -146,6 +146,8 @@ export class Grid {
             const tile = this.newTile(tileData.position,tileData.size,tileData.logo)
             tile.progress = tileData.progress || 0
             tile.inverted = tileData.inverted || false
+            tile.name = tileData.name
+            tile.area = tileData.area
         })
         this.calculateProgressAll()
     }

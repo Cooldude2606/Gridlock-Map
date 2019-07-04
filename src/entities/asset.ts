@@ -83,4 +83,19 @@ export class TileAsset {
         sketch.image(connection.image,deltaPosition.x,deltaPosition.y,assetSize.x,assetSize.y,sx,sy,assetSize.x,assetSize.y)
     }
 
+    drawAreaBound(sketch: p5, direction: Direction, sourceArea: string, delta: Position = {x:0,y:0}) {
+        const deltaPosition = tileToPixel(delta)
+        const assetSize = renderSettings.tileSize
+        const minX = deltaPosition.x
+        const minY = deltaPosition.y
+        const maxX = assetSize.x+deltaPosition.x
+        const maxY = assetSize.y+deltaPosition.y
+        sketch.stroke(sourceArea)
+        switch (direction) {
+            case Direction.up: sketch.line(minX+3,minY,minX+9,minY); sketch.line(maxX-9,minY,maxX-3,minY); break
+            case Direction.right: sketch.line(maxX,minY+3,maxX,minY+9); sketch.line(maxX,maxY-9,maxX,maxY-3); break
+            case Direction.down: sketch.line(minX+3,maxY,minX+9,maxY); sketch.line(maxX-9,maxY,maxX-3,maxY); break
+            case Direction.left: sketch.line(minX,minY+3,minX,minY+9); sketch.line(minX,maxY-9,minX,maxY-3); break
+        }
+    }
 }
