@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var defines_1 = require("../lib/defines");
-var config_1 = require("../public/config");
-var log_1 = require("../lib/log");
-var tileSpriteSheets = [];
-var connectionSpriteSheets = [];
+const defines_1 = require("../lib/defines");
+const config_1 = require("../public/config");
+const log_1 = require("../lib/log");
+const tileSpriteSheets = [];
+const connectionSpriteSheets = [];
 function newTileSpriteSheet(image, config, logo) {
-    log_1.log.debug("Loaded sprite sheet from: " + config.file);
+    log_1.log.debug(`Loaded sprite sheet from: ${config.file}`);
     tileSpriteSheets.push({
         image: image,
         tileSize: {
@@ -22,8 +22,8 @@ function newTileSpriteSheet(image, config, logo) {
 }
 exports.newTileSpriteSheet = newTileSpriteSheet;
 function newConnectionSpriteSheet(image, range, config) {
-    log_1.log.debug("Loaded sprite sheet from: " + config.file);
-    var connections = connectionSpriteSheets.find(function (connection) {
+    log_1.log.debug(`Loaded sprite sheet from: ${config.file}`);
+    let connections = connectionSpriteSheets.find(connection => {
         return range.minimum == connection.range.minimum && range.maximum == connection.range.maximum;
     });
     if (!connections) {
@@ -42,48 +42,47 @@ function newConnectionSpriteSheet(image, range, config) {
     });
 }
 exports.newConnectionSpriteSheet = newConnectionSpriteSheet;
-var TileAsset = (function () {
-    function TileAsset(size, logo) {
+class TileAsset {
+    constructor(size, logo) {
         this.size = size;
-        this.spriteSheet = tileSpriteSheets.find(function (spriteSheet) {
+        this.spriteSheet = tileSpriteSheets.find(spriteSheet => {
             return spriteSheet.tileSize.x == size.x && spriteSheet.tileSize.y == size.y && spriteSheet.logo == logo;
+        }) || tileSpriteSheets.find(spriteSheet => {
+            return spriteSheet.tileSize.x == 1 && spriteSheet.tileSize.y == 1;
         });
     }
-    TileAsset.prototype.drawTile = function (sketch, progress, inverted) {
-        if (inverted === void 0) { inverted = false; }
-        var assetSize = this.spriteSheet.assetSize;
-        var x = assetSize.x;
-        var y = assetSize.y;
-        var sx = assetSize.x * progress;
-        var sy = inverted && progress < 18 ? assetSize.y : 0;
+    drawTile(sketch, progress, inverted = false) {
+        const assetSize = this.spriteSheet.assetSize;
+        const x = assetSize.x;
+        const y = assetSize.y;
+        const sx = assetSize.x * progress;
+        const sy = inverted && progress < 18 ? assetSize.y : 0;
         sketch.image(this.spriteSheet.image, 0, 0, x, y, sx, sy, x, y);
-    };
-    TileAsset.prototype.drawConnection = function (sketch, direction, sourceProgress, targetProgress, delta) {
-        if (delta === void 0) { delta = { x: 0, y: 0 }; }
-        var deltaPosition = config_1.tileToPixel(delta);
-        var assetSize = config_1.renderSettings.tileSize;
-        var sx = assetSize.x * direction;
-        var sy = 0;
-        var spriteSheet = connectionSpriteSheets.find(function (spriteSheet) {
+    }
+    drawConnection(sketch, direction, sourceProgress, targetProgress, delta = { x: 0, y: 0 }) {
+        const deltaPosition = config_1.tileToPixel(delta);
+        const assetSize = config_1.renderSettings.tileSize;
+        const sx = assetSize.x * direction;
+        const sy = 0;
+        const spriteSheet = connectionSpriteSheets.find(spriteSheet => {
             return sourceProgress >= spriteSheet.range.minimum && sourceProgress <= spriteSheet.range.maximum;
         });
         if (!spriteSheet)
             return;
-        var connection = spriteSheet.connections.find(function (connection) {
+        const connection = spriteSheet.connections.find(connection => {
             return targetProgress >= connection.range.minimum && targetProgress <= connection.range.maximum;
         });
         if (!connection)
             return;
         sketch.image(connection.image, deltaPosition.x, deltaPosition.y, assetSize.x, assetSize.y, sx, sy, assetSize.x, assetSize.y);
-    };
-    TileAsset.prototype.drawAreaBound = function (sketch, direction, sourceArea, delta) {
-        if (delta === void 0) { delta = { x: 0, y: 0 }; }
-        var deltaPosition = config_1.tileToPixel(delta);
-        var assetSize = config_1.renderSettings.tileSize;
-        var minX = deltaPosition.x;
-        var minY = deltaPosition.y;
-        var maxX = assetSize.x + deltaPosition.x;
-        var maxY = assetSize.y + deltaPosition.y;
+    }
+    drawAreaBound(sketch, direction, sourceArea, delta = { x: 0, y: 0 }) {
+        const deltaPosition = config_1.tileToPixel(delta);
+        const assetSize = config_1.renderSettings.tileSize;
+        const minX = deltaPosition.x;
+        const minY = deltaPosition.y;
+        const maxX = assetSize.x + deltaPosition.x;
+        const maxY = assetSize.y + deltaPosition.y;
         sketch.stroke(sourceArea);
         switch (direction) {
             case defines_1.Direction.up:
@@ -103,7 +102,6 @@ var TileAsset = (function () {
                 sketch.line(minX, maxY - 9, minX, maxY - 3);
                 break;
         }
-    };
-    return TileAsset;
-}());
+    }
+}
 exports.TileAsset = TileAsset;

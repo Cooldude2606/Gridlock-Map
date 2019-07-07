@@ -54,11 +54,12 @@ export interface ConnectionSpriteSheet {
 }
 
 export interface TileImport {
-    position: Position
-    size: Size
+    Name?: string
+    Width: number
+    Height: number
+    TopLeftCoordinate: {X: number, Y:number}
+    regionColor ?: string
     progress?: number
-    inverted?: boolean
-    logo?: string
-    name?: string
-    area?: string
+    rocketLaunched?: boolean
+    logoName?: string
 }

@@ -1,223 +1,268 @@
 [
 	{
-		"position": { "x":0, "y":0 },
-		"size": { "x":2, "y":2 },
-		"logo": "upcloud"
+		"TopLeftCoordinate": { "X":0, "Y":0 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "upcloud"
 	},
 	{
-		"position": { "x":2, "y":0 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":2, "Y":0 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":11, "y":0 },
-		"size": { "x":2, "y":2 },
-		"logo": "redmew"
+		"TopLeftCoordinate": { "X":11, "Y":0 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "redmew"
 	},
 	{
-		"position": { "x":4, "y":1 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":4, "Y":1 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":5, "y":1 },
-		"size": { "x":2, "y":2 },
-		"logo": "p74"
+		"TopLeftCoordinate": { "X":5, "Y":1 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "p74"
 	},
 	{
-		"position": { "x":7, "y":1 },
-		"size": { "x":2, "y":1 }
+		"TopLeftCoordinate": { "X":7, "Y":1 },
+		"Width": 2,
+		"Height": 1
 	},
 	{
-		"position": { "x":10, "y":1 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":10, "Y":1 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":1, "y":2 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":1, "Y":2 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":8, "y":2 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":8, "Y":2 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":12, "y":2 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":12, "Y":2 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":0, "y":3 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":0, "Y":3 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":1, "y":3 },
-		"size": { "x":2, "y":2 },
-		"logo": "lizzian"
+		"TopLeftCoordinate": { "X":1, "Y":3 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "lizzian"
 	},
 	{
-		"position": { "x":6, "y":3 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":6, "Y":3 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":9, "y":3 },
-		"size": { "x":2, "y":2 },
-		"logo": "expgaming"
+		"TopLeftCoordinate": { "X":9, "Y":3 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "expgaming"
 	},
 	{
-		"position": { "x":12, "y":3 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":12, "Y":3 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":3, "y":4 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":3, "Y":4 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":4, "y":4 },
-		"size": { "x":2, "y":1 }
+		"TopLeftCoordinate": { "X":4, "Y":4 },
+		"Width": 2,
+		"Height": 1
 	},
 	{
-		"position": { "x":2, "y":5 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":2, "Y":5 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":9, "y":5 },
-		"size": { "x":1, "y":2 },
-		"inverted": true,
+		"TopLeftCoordinate": { "X":9, "Y":5 },
+		"Width": 1,
+		"Height": 2,
+		"rocketLaunched": true,
 		"progress": 8,
-		"name": "Starrywinter",
-		"area": "#00FF00"
+		"Name": "Starrywinter",
+		"regionColor": "#00FF00"
 	},
 	{
-		"position": { "x":11, "y":5 },
-		"size": { "x":2, "y":1 }
+		"TopLeftCoordinate": { "X":11, "Y":5 },
+		"Width": 2,
+		"Height": 1
 	},
 	{
-		"position": { "x":0, "y":6 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":0, "Y":6 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":3, "y":6 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":3, "Y":6 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":4, "y":6 },
-		"size": { "x":1, "y":2 },
-		"inverted": true,
+		"TopLeftCoordinate": { "X":4, "Y":6 },
+		"Width": 1,
+		"Height": 2,
+		"rocketLaunched": true,
 		"progress": 15,
-		"name": "Eriwick",
-		"area": "#FF0000"
+		"Name": "Eriwick",
+		"regionColor": "#FF0000"
 	},
 	{
-		"position": { "x":6, "y":6 },
-		"size": { "x":2, "y":2 },
-		"logo": "fmmo",
-		"inverted": true,
+		"TopLeftCoordinate": { "X":6, "Y":6 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "fmmo",
+		"rocketLaunched": true,
 		"progress": 17,
-		"name": "Lightston",
-		"area": "#FF0000"
+		"Name": "Lightston",
+		"regionColor": "#FF0000"
 	},
 	{
-		"position": { "x":11, "y":6 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":11, "Y":6 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":3, "y":7 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":3, "Y":7 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":5, "y":7 },
-		"size": { "x":1, "y":1 },
-		"inverted": true,
+		"TopLeftCoordinate": { "X":5, "Y":7 },
+		"Width": 1,
+		"Height": 1,
+		"rocketLaunched": true,
 		"progress": 17,
-		"name": "Dorwall",
-		"area": "#FF0000"
+		"Name": "Dorwall",
+		"regionColor": "#FF0000"
 	},
 	{
-		"position": { "x":8, "y":7 },
-		"size": { "x":2, "y":1 },
-		"inverted": true,
+		"TopLeftCoordinate": { "X":8, "Y":7 },
+		"Width": 2,
+		"Height": 1,
+		"rocketLaunched": true,
 		"progress": 17,
-		"name": "Crystalham",
-		"area": "#00FF00"
+		"Name": "Crystalham",
+		"regionColor": "#00FF00"
 	},
 	{
-		"position": { "x":10, "y":7 },
-		"size": { "x":1, "y":1 },
+		"TopLeftCoordinate": { "X":10, "Y":7 },
+		"Width": 1,
+		"Height": 1,
 		"progress": 17,
-		"name": "Icewheat",
-		"area": "#00FF00"
+		"Name": "Icewheat",
+		"regionColor": "#00FF00"
 	},
 	{
-		"position": { "x":11, "y":7 },
-		"size": { "x":1, "y":1 },
-		"inverted": true,
+		"TopLeftCoordinate": { "X":11, "Y":7 },
+		"Width": 1,
+		"Height": 1,
+		"rocketLaunched": true,
 		"progress": 13,
-		"name": "Aldmarble",
-		"area": "#00FF00"
+		"Name": "Aldmarble",
+		"regionColor": "#00FF00"
 	},
 	{
-		"position": { "x":0, "y":8 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":0, "Y":8 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":1, "y":8 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":1, "Y":8 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":6, "y":8 },
-		"size": { "x":1, "y":2 },
-		"inverted": true,
+		"TopLeftCoordinate": { "X":6, "Y":8 },
+		"Width": 1,
+		"Height": 2,
+		"rocketLaunched": true,
 		"progress": 17,
-		"name": "Marblemont",
-		"area": "#FF0000"
+		"Name": "Marblemont",
+		"regionColor": "#FF0000"
 	},
 	{
-		"position": { "x":10, "y":8 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":10, "Y":8 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":2, "y":9 },
-		"size": { "x":2, "y":2 },
-		"logo": "kaeltar"
+		"TopLeftCoordinate": { "X":2, "Y":9 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "kaeltar"
 	},
 	{
-		"position": { "x":7, "y":9 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":7, "Y":9 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":7, "y":10 },
-		"size": { "x":2, "y":2 },
-		"logo": "japc"
+		"TopLeftCoordinate": { "X":7, "Y":10 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "japc"
 	},
 	{
-		"position": { "x":9, "y":10 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":9, "Y":10 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":10, "y":10 },
-		"size": { "x":2, "y":1 }
+		"TopLeftCoordinate": { "X":10, "Y":10 },
+		"Width": 2,
+		"Height": 1
 	},
 	{
-		"position": { "x":0, "y":11 },
-		"size": { "x":2, "y":2 },
-		"logo": "tobi"
+		"TopLeftCoordinate": { "X":0, "Y":11 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "tobi"
 	},
 	{
-		"position": { "x":2, "y":11 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":2, "Y":11 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":5, "y":11 },
-		"size": { "x":1, "y":2 }
+		"TopLeftCoordinate": { "X":5, "Y":11 },
+		"Width": 1,
+		"Height": 2
 	},
 	{
-		"position": { "x":6, "y":11 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":6, "Y":11 },
+		"Width": 1,
+		"Height": 1
 	},
 	{
-		"position": { "x":11, "y":11 },
-		"size": { "x":2, "y":2 },
-		"logo": "areyouscared"
+		"TopLeftCoordinate": { "X":11, "Y":11 },
+		"Width": 2,
+		"Height": 2,
+		"logoName": "areyouscared"
 	},
 	{
-		"position": { "x":8, "y":12 },
-		"size": { "x":1, "y":1 }
+		"TopLeftCoordinate": { "X":8, "Y":12 },
+		"Width": 1,
+		"Height": 1
 	}
 ]

@@ -6,7 +6,7 @@
         "sourceMap": true,
         "allowJs": true,
         "noLib": false,
-        "target": "es5",
+        "target": "es2015",
         "module": "commonjs",
         "sourceRoot": "./src",
         "outDir": "./dist"

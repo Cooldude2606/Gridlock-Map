@@ -4,6 +4,7 @@ var tsProject = ts.createProject('tsconfig.json');
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
 var tsify = require('tsify');
+var uglify = require('gulp-uglify-es').default;
 var sourcemaps = require('gulp-sourcemaps');
 var buffer = require('vinyl-buffer');
 var paths = {
@@ -45,6 +46,7 @@ gulp.task('build-public', () => {
     .pipe(source('public/build.js'))
     .pipe(buffer())
     .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(uglify())
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest('dist'));
 })

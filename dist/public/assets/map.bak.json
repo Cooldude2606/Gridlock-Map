@@ -1,0 +1,223 @@
+[
+	{
+		"position": { "x":0, "y":0 },
+		"size": { "x":2, "y":2 },
+		"logo": "upcloud"
+	},
+	{
+		"position": { "x":2, "y":0 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":11, "y":0 },
+		"size": { "x":2, "y":2 },
+		"logo": "redmew"
+	},
+	{
+		"position": { "x":4, "y":1 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":5, "y":1 },
+		"size": { "x":2, "y":2 },
+		"logo": "p74"
+	},
+	{
+		"position": { "x":7, "y":1 },
+		"size": { "x":2, "y":1 }
+	},
+	{
+		"position": { "x":10, "y":1 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":1, "y":2 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":8, "y":2 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":12, "y":2 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":0, "y":3 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":1, "y":3 },
+		"size": { "x":2, "y":2 },
+		"logo": "lizzian"
+	},
+	{
+		"position": { "x":6, "y":3 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":9, "y":3 },
+		"size": { "x":2, "y":2 },
+		"logo": "expgaming"
+	},
+	{
+		"position": { "x":12, "y":3 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":3, "y":4 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":4, "y":4 },
+		"size": { "x":2, "y":1 }
+	},
+	{
+		"position": { "x":2, "y":5 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":9, "y":5 },
+		"size": { "x":1, "y":2 },
+		"inverted": true,
+		"progress": 8,
+		"name": "Starrywinter",
+		"area": "#00FF00"
+	},
+	{
+		"position": { "x":11, "y":5 },
+		"size": { "x":2, "y":1 }
+	},
+	{
+		"position": { "x":0, "y":6 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":3, "y":6 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":4, "y":6 },
+		"size": { "x":1, "y":2 },
+		"inverted": true,
+		"progress": 15,
+		"name": "Eriwick",
+		"area": "#FF0000"
+	},
+	{
+		"position": { "x":6, "y":6 },
+		"size": { "x":2, "y":2 },
+		"logo": "fmmo",
+		"inverted": true,
+		"progress": 17,
+		"name": "Lightston",
+		"area": "#FF0000"
+	},
+	{
+		"position": { "x":11, "y":6 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":3, "y":7 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":5, "y":7 },
+		"size": { "x":1, "y":1 },
+		"inverted": true,
+		"progress": 17,
+		"name": "Dorwall",
+		"area": "#FF0000"
+	},
+	{
+		"position": { "x":8, "y":7 },
+		"size": { "x":2, "y":1 },
+		"inverted": true,
+		"progress": 17,
+		"name": "Crystalham",
+		"area": "#00FF00"
+	},
+	{
+		"position": { "x":10, "y":7 },
+		"size": { "x":1, "y":1 },
+		"progress": 17,
+		"name": "Icewheat",
+		"area": "#00FF00"
+	},
+	{
+		"position": { "x":11, "y":7 },
+		"size": { "x":1, "y":1 },
+		"inverted": true,
+		"progress": 13,
+		"name": "Aldmarble",
+		"area": "#00FF00"
+	},
+	{
+		"position": { "x":0, "y":8 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":1, "y":8 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":6, "y":8 },
+		"size": { "x":1, "y":2 },
+		"inverted": true,
+		"progress": 17,
+		"name": "Marblemont",
+		"area": "#FF0000"
+	},
+	{
+		"position": { "x":10, "y":8 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":2, "y":9 },
+		"size": { "x":2, "y":2 },
+		"logo": "kaeltar"
+	},
+	{
+		"position": { "x":7, "y":9 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":7, "y":10 },
+		"size": { "x":2, "y":2 },
+		"logo": "japc"
+	},
+	{
+		"position": { "x":9, "y":10 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":10, "y":10 },
+		"size": { "x":2, "y":1 }
+	},
+	{
+		"position": { "x":0, "y":11 },
+		"size": { "x":2, "y":2 },
+		"logo": "tobi"
+	},
+	{
+		"position": { "x":2, "y":11 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":5, "y":11 },
+		"size": { "x":1, "y":2 }
+	},
+	{
+		"position": { "x":6, "y":11 },
+		"size": { "x":1, "y":1 }
+	},
+	{
+		"position": { "x":11, "y":11 },
+		"size": { "x":2, "y":2 },
+		"logo": "areyouscared"
+	},
+	{
+		"position": { "x":8, "y":12 },
+		"size": { "x":1, "y":1 }
+	}
+]

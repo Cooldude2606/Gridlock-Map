@@ -143,11 +143,11 @@ export class Grid {
         log.debug('Loading new map data')
         this.tiles = []
         data.forEach(tileData => {
-            const tile = this.newTile(tileData.position,tileData.size,tileData.logo)
+            const tile = this.newTile({x: tileData.TopLeftCoordinate.X, y: tileData.TopLeftCoordinate.Y},{x: tileData.Width, y: tileData.Height},tileData.logoName)
             tile.progress = tileData.progress || 0
-            tile.inverted = tileData.inverted || false
-            tile.name = tileData.name
-            tile.area = tileData.area
+            tile.inverted = tileData.rocketLaunched || false
+            if (tileData.Name) tile.name = tileData.Name
+            tile.area = tileData.regionColor
         })
         this.calculateProgressAll()
     }

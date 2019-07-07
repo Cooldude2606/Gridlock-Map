@@ -113,12 +113,13 @@ function sketchDefine(sketch: p5) {
         grid.draw(sketch)
 
         if (selected && selected.progress >= renderSettings.allowSelectionAtProgress) {
+            const topLeft = tileToPixel(grid.area.topLeft)
             const rawTilePosition = selected.position
             const tilePosition = tileToPixel(rawTilePosition)
             const rawTileSize = selected.size
             const tileSize = tileToPixel(rawTileSize)
-            const px = tilePosition.x-grid.center.x
-            const py = tilePosition.y-grid.center.y
+            const px = tilePosition.x-grid.center.x-topLeft.x
+            const py = tilePosition.y-grid.center.y-topLeft.y
             sketch.image(cursor,px-(4.5*rawTileSize.x),py-(4.5*rawTileSize.y),tileSize.x+(9*rawTileSize.x),tileSize.y+(9*rawTileSize.y),0,0,64,64)
             sketch.fill(renderSettings.textBackground)
             sketch.stroke(renderSettings.textBackgroundOutline)
@@ -160,8 +161,9 @@ function sketchDefine(sketch: p5) {
     }
 
     sketch.mouseMoved = () => {
-        const mouseX = sketch.mouseX-center.x+(grid.center.x*scale)
-        const mouseY = sketch.mouseY-center.y+(grid.center.y*scale)
+        const topLeft = tileToPixel(grid.area.topLeft)
+        const mouseX = sketch.mouseX-center.x+(grid.center.x*scale)+(topLeft.x*scale)
+        const mouseY = sketch.mouseY-center.y+(grid.center.y*scale)+(topLeft.y*scale)
         const tilePosition = pixelToTile({
             x: mouseX/scale,
             y:  mouseY/scale

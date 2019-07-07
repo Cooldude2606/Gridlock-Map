@@ -103,8 +103,9 @@ export class Tile {
     draw(sketch: p5, grid: Grid) {
         if (!this.buffer) this.newBuffer(sketch,grid)
 
+        const topLeft = tileToPixel(grid.area.topLeft)
         const positionPixel = tileToPixel(this.position)
-        grid.buffer.image(this.buffer,positionPixel.x,positionPixel.y)
+        grid.buffer.image(this.buffer,positionPixel.x-topLeft.x,positionPixel.y-topLeft.y)
     }
 
 }
