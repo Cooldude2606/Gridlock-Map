@@ -101,12 +101,12 @@ class Grid {
                 const calc = config_1.progressCalculations.find(calcs => {
                     return adjacentTile.progress >= calcs.min && adjacentTile.progress <= calcs.max;
                 });
-                const rtn = calc.rtn(adjacentTile.progress);
+                const rtn = calc ? calc.rtn(adjacentTile.progress) : -1;
                 if (newProgress < rtn)
                     newProgress = rtn;
             });
-            tile.progress = newProgress < 0 ? 0 : newProgress;
-            if (tile.progress > 0) {
+            tile.progress = newProgress;
+            if (tile.progress >= 0) {
                 adjacent.forEach(adjacentTile => {
                     if (!queue.includes(adjacentTile))
                         queue.push(adjacentTile);
@@ -125,7 +125,7 @@ class Grid {
         this.tiles = [];
         data.forEach(tileData => {
             const tile = this.newTile({ x: tileData.TopLeftCoordinate.X, y: tileData.TopLeftCoordinate.Y }, { x: tileData.Width, y: tileData.Height }, tileData.logoName);
-            tile.progress = tileData.progress || 0;
+            tile.progress = tileData.progress || -1;
             tile.inverted = tileData.rocketLaunched || false;
             if (tileData.Name)
                 tile.name = tileData.Name;

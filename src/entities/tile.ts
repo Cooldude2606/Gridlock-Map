@@ -27,7 +27,7 @@ export class Redirect {
         for (let direction = Direction.up; direction <= Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position,direction)
             if (targetTile && targetTile !== this.tile) {
-                if (tile.area && tile.area != targetTile.area && tile.progress >= renderRequirement) {
+                if (tile.area && (tile.area != targetTile.area || targetTile.progress < renderRequirement) && tile.progress >= renderRequirement) {
                     log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sa:${tile.area},ta:${targetTile.area}}`)
                     tile.asset.drawAreaBound(tile.buffer,direction,tile.area,this.delta)
                 }
@@ -56,11 +56,12 @@ export class Tile {
     area: string
 
     constructor(position: Position, size: Size, logo?: string) {
+        logo = logo == '' ? undefined : logo
         this.position = position
         this.size = size
         this.asset = new TileAsset(size,logo)
         this.redirects = []
-        this.progress = 0
+        this.progress = -1
         this.inverted = false
         this.logo = logo
         this.name = `X: ${position.x} Y: ${position.y}`
@@ -82,7 +83,7 @@ export class Tile {
             const targetTile = grid.getTileDirection(this.position,direction)
 
             if (targetTile && targetTile !== this) {
-                if (this.area && this.area != targetTile.area && this.progress >= renderRequirement) {
+                if (this.area && (this.area != targetTile.area || targetTile.progress < renderRequirement) && this.progress >= renderRequirement) {
                     log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${Direction[direction]},sa:${this.area},ta:${targetTile.area}}`)
                     this.asset.drawAreaBound(this.buffer,direction,this.area)
                 }

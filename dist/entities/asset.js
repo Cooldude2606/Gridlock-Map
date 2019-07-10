@@ -52,6 +52,8 @@ class TileAsset {
         });
     }
     drawTile(sketch, progress, inverted = false) {
+        if (progress == 0)
+            return;
         const assetSize = this.spriteSheet.assetSize;
         const x = assetSize.x;
         const y = assetSize.y;

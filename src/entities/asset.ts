@@ -58,6 +58,7 @@ export class TileAsset {
     }
 
     drawTile(sketch: p5, progress: number, inverted: boolean = false) {
+        if (progress == 0) return
         const assetSize = this.spriteSheet.assetSize
         const x = assetSize.x
         const y = assetSize.y

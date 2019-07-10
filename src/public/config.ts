@@ -32,8 +32,17 @@ export function pixelToTile(data: Size|Position): Size|Position {
 export const tileAssets = [
     { x: 1, y: 1, file: 'tile000.png'},
     { x: 2, y: 1, file: 'tile001.png'},
-    { x: 1, y: 2, file: 'tile002.png'},
-    { x: 2, y: 2, file: 'tile003.png'}
+    { x: 3, y: 1, file: 'tile002.png'},
+    { x: 4, y: 1, file: 'tile003.png'},
+    { x: 1, y: 2, file: 'tile004.png'},
+    { x: 2, y: 2, file: 'tile005.png'},
+    { x: 3, y: 2, file: 'tile006.png'},
+    { x: 1, y: 3, file: 'tile007.png'},
+    { x: 2, y: 3, file: 'tile008.png'},
+    { x: 3, y: 3, file: 'tile009.png'},
+    { x: 5, y: 3, file: 'tile010.png'},
+    { x: 2, y: 4, file: 'tile011.png'},
+    { x: 4, y: 4, file: 'tile012.png'},
 ]
 
 export const logoAssets: Dictionary = {
@@ -52,8 +61,8 @@ export const logoAssets: Dictionary = {
 }
 
 export const progressCalculations = [
-    { min: 0, max: 6, rtn: (p:number):number => p-2},
-    { min: 7, max: 7, rtn: (p:number):number => p-1},
+    { min: 0, max: 6, rtn: (p:number):number => p-3},
+    { min: 7, max: 7, rtn: (p:number):number => p-2},
     { min: 8, max: 16, rtn: (p:number):number => 5},
     { min: 17, max: 18, rtn: (p:number):number => 7},
 ]

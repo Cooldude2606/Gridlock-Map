@@ -19,7 +19,7 @@ class Redirect {
         for (let direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this.tile) {
-                if (tile.area && tile.area != targetTile.area && tile.progress >= renderRequirement) {
+                if (tile.area && (tile.area != targetTile.area || targetTile.progress < renderRequirement) && tile.progress >= renderRequirement) {
                     log_1.log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${defines_1.Direction[direction]},sa:${tile.area},ta:${targetTile.area}}`);
                     tile.asset.drawAreaBound(tile.buffer, direction, tile.area, this.delta);
                 }
@@ -36,11 +36,12 @@ class Redirect {
 exports.Redirect = Redirect;
 class Tile {
     constructor(position, size, logo) {
+        logo = logo == '' ? undefined : logo;
         this.position = position;
         this.size = size;
         this.asset = new asset_1.TileAsset(size, logo);
         this.redirects = [];
-        this.progress = 0;
+        this.progress = -1;
         this.inverted = false;
         this.logo = logo;
         this.name = `X: ${position.x} Y: ${position.y}`;
@@ -58,7 +59,7 @@ class Tile {
         for (let direction = defines_1.Direction.up; direction <= defines_1.Direction.left; direction++) {
             const targetTile = grid.getTileDirection(this.position, direction);
             if (targetTile && targetTile !== this) {
-                if (this.area && this.area != targetTile.area && this.progress >= renderRequirement) {
+                if (this.area && (this.area != targetTile.area || targetTile.progress < renderRequirement) && this.progress >= renderRequirement) {
                     log_1.log.debug(`Rendered area bound: {x:${this.position.x},y:${this.position.y},d:${defines_1.Direction[direction]},sa:${this.area},ta:${targetTile.area}}`);
                     this.asset.drawAreaBound(this.buffer, direction, this.area);
                 }
