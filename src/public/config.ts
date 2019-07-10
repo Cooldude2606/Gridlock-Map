@@ -61,7 +61,7 @@ export const logoAssets: Dictionary = {
 }
 
 export const progressCalculations = [
-    { min: 0, max: 6, rtn: (p:number):number => p-3},
+    { min: 0, max: 6, rtn: (p:number):number => p-4},
     { min: 7, max: 7, rtn: (p:number):number => p-2},
     { min: 8, max: 16, rtn: (p:number):number => 5},
     { min: 17, max: 18, rtn: (p:number):number => 7},
